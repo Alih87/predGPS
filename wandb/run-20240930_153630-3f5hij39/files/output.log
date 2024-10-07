@@ -1,0 +1,57 @@
+Batch 10 loss: 0.0025059421062469485
+Batch 20 loss: 0.00014767792308703064
+Batch 30 loss: 0.00022842338774353265
+Batch 40 loss: 0.00010540665371809155
+Batch 50 loss: 6.650944272405468e-05
+Batch 60 loss: 0.00022285282897064462
+Batch 70 loss: 0.00019773000525310635
+Batch 80 loss: 0.00010926297726109624
+Batch 90 loss: 0.00020604343432933093
+Batch 100 loss: 0.00033862126176245513
+Batch 110 loss: 0.00011111813737079501
+Batch 120 loss: 0.00017279322165995837
+Batch 130 loss: 0.0002702338667586446
+Batch 140 loss: 0.00017976814310532063
+Batch 150 loss: 0.00020796408096794038
+Batch 160 loss: 0.00015039050282211974
+Batch 170 loss: 0.00025085668032988903
+Batch 180 loss: 0.000129829972225707
+Batch 190 loss: 0.0001588737079873681
+Batch 200 loss: 0.0002330082580447197
+Batch 210 loss: 0.0002673795155715197
+Batch 220 loss: 0.0001738232234492898
+Batch 230 loss: 0.00014600771386176348
+Batch 240 loss: 0.00015691565070301294
+Batch 250 loss: 0.00018909331143368034
+Batch 260 loss: 0.00015646718721836806
+Batch 270 loss: 0.00017074850085191428
+Batch 280 loss: 0.00023276231670752166
+Batch 290 loss: 0.00013198127597570419
+Batch 300 loss: 0.0002090832479298115
+Batch 310 loss: 0.00016777745983563363
+Batch 320 loss: 0.0002081890320405364
+Batch 330 loss: 0.00015459764935076237
+Batch 340 loss: 3.229056968120858e-05
+Batch 350 loss: 9.52021970806527e-05
+Batch 360 loss: 0.0003944378496307763
+Batch 370 loss: 0.00021570830140262842
+Batch 380 loss: 0.00014311267668381332
+Batch 390 loss: 0.00027582810865715146
+Batch 400 loss: 0.0001701043304055929
+Batch 410 loss: 0.00023123335419222713
+Batch 420 loss: 0.0001378111420199275
+Batch 430 loss: 0.00022349676163867116
+[INFO] Not enough data, proceeding...
+Epoch Done
+Traceback (most recent call last):
+  File "/data_hdd1/hassan/projects/GPS/train.py", line 114, in <module>
+    vy_ = model(vX)
+  File "/home/user01/anaconda3/envs/pt/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/data_hdd1/hassan/projects/GPS/GI_NN.py", line 25, in forward
+    b = self.gnn(a)
+  File "/home/user01/anaconda3/envs/pt/lib/python3.6/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/user01/anaconda3/envs/pt/lib/python3.6/site-packages/torch/nn/modules/rnn.py", line 850, in forward
+    self.dropout, self.training, self.bidirectional, self.batch_first)
+KeyboardInterrupt

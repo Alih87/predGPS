@@ -1,0 +1,6 @@
+[INFO] Not enough data, proceeding...
+Epoch Done
+Traceback (most recent call last):
+  File "/data_hdd1/hassan/projects/GPS/train.py", line 108, in <module>
+    print(vy_scaled.shape)
+NameError: name 'vy_scaled' is not defined

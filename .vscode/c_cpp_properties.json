@@ -1,0 +1,37 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/scout/catkin_ws/devel/include/**",
+        "/home/scout/catkin_ws_d455/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/scout/catkin_ws/src/farm_data/include/**",
+        "/home/scout/catkin_ws/src/gps_nav/include/**",
+        "/home/scout/catkin_ws/src/imu_tools/imu_complementary_filter/include/**",
+        "/home/scout/catkin_ws/src/imu_tools/imu_filter_madgwick/include/**",
+        "/home/scout/catkin_ws_d455/src/realsense-ros/realsense2_camera/include/**",
+        "/home/scout/catkin_ws/src/robot_localization/include/**",
+        "/home/scout/catkin_ws/src/scout_ros/scout_base/include/**",
+        "/home/scout/catkin_ws/src/serial/include/**",
+        "/home/scout/catkin_ws/src/ublox/ublox_gps/include/**",
+        "/home/scout/catkin_ws/src/ublox/ublox_msg_filters/include/**",
+        "/home/scout/catkin_ws/src/ublox/ublox_msgs/include/**",
+        "/home/scout/catkin_ws/src/ublox/ublox_serialization/include/**",
+        "/home/scout/catkin_ws/src/ugv_sdk/include/**",
+        "/home/scout/catkin_ws/src/um7/include/**",
+        "/home/scout/catkin_ws/src/vslam/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

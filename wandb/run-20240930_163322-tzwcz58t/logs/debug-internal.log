@@ -1,0 +1,251 @@
+2024-09-30 16:33:22,999 INFO    StreamThr :2081151 [internal.py:wandb_internal():89] W&B internal server running at pid: 2081151, started at: 2024-09-30 16:33:22.997498
+2024-09-30 16:33:23,000 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status
+2024-09-30 16:33:23,001 INFO    WriterThread:2081151 [datastore.py:open_for_write():85] open: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/run-tzwcz58t.wandb
+2024-09-30 16:33:23,003 DEBUG   SenderThread:2081151 [sender.py:send():375] send: header
+2024-09-30 16:33:23,003 DEBUG   SenderThread:2081151 [sender.py:send():375] send: run
+2024-09-30 16:33:23,488 INFO    SenderThread:2081151 [dir_watcher.py:__init__():219] watching files in: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files
+2024-09-30 16:33:23,489 INFO    SenderThread:2081151 [sender.py:_start_run_threads():1127] run started: tzwcz58t with start time 1727681602.996675
+2024-09-30 16:33:23,489 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: summary_record
+2024-09-30 16:33:23,489 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:33:23,491 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: check_version
+2024-09-30 16:33:23,491 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: check_version
+2024-09-30 16:33:23,548 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: run_start
+2024-09-30 16:33:23,558 DEBUG   HandlerThread:2081151 [system_info.py:__init__():31] System info init
+2024-09-30 16:33:23,558 DEBUG   HandlerThread:2081151 [system_info.py:__init__():46] System info init done
+2024-09-30 16:33:23,558 INFO    HandlerThread:2081151 [system_monitor.py:start():181] Starting system monitor
+2024-09-30 16:33:23,558 INFO    SystemMonitor:2081151 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2024-09-30 16:33:23,559 INFO    HandlerThread:2081151 [system_monitor.py:probe():201] Collecting system info
+2024-09-30 16:33:23,559 INFO    SystemMonitor:2081151 [interfaces.py:start():190] Started cpu monitoring
+2024-09-30 16:33:23,560 INFO    SystemMonitor:2081151 [interfaces.py:start():190] Started disk monitoring
+2024-09-30 16:33:23,561 INFO    SystemMonitor:2081151 [interfaces.py:start():190] Started gpu monitoring
+2024-09-30 16:33:23,561 INFO    SystemMonitor:2081151 [interfaces.py:start():190] Started memory monitoring
+2024-09-30 16:33:23,562 INFO    SystemMonitor:2081151 [interfaces.py:start():190] Started network monitoring
+2024-09-30 16:33:23,589 DEBUG   HandlerThread:2081151 [system_info.py:probe():195] Probing system
+2024-09-30 16:33:23,589 DEBUG   HandlerThread:2081151 [git.py:repo():40] git repository is invalid
+2024-09-30 16:33:23,589 DEBUG   HandlerThread:2081151 [system_info.py:probe():240] Probing system done
+2024-09-30 16:33:23,589 DEBUG   HandlerThread:2081151 [system_monitor.py:probe():210] {'os': 'Linux-5.15.0-119-generic-x86_64-with-debian-bullseye-sid', 'python': '3.6.9', 'heartbeatAt': '2024-09-30T07:33:23.589418', 'startedAt': '2024-09-30T07:33:22.987137', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/data_hdd1/hassan/projects/GPS/train.py', 'codePath': 'train.py', 'host': 'user01-All-Series', 'username': 'user01', 'executable': '/home/user01/anaconda3/envs/pt/bin/python', 'cpu_count': 6, 'cpu_count_logical': 6, 'cpu_freq': {'current': 2195.3823333333335, 'min': 1200.0, 'max': 3700.0}, 'cpu_freq_per_core': [{'current': 1200.0, 'min': 1200.0, 'max': 3700.0}, {'current': 3576.256, 'min': 1200.0, 'max': 3700.0}, {'current': 1200.0, 'min': 1200.0, 'max': 3700.0}, {'current': 2000.0, 'min': 1200.0, 'max': 3700.0}, {'current': 1600.0, 'min': 1200.0, 'max': 3700.0}, {'current': 3596.038, 'min': 1200.0, 'max': 3700.0}], 'disk': {'total': 233.17901229858398, 'used': 107.87147903442383}, 'gpu': 'NVIDIA GeForce GTX TITAN X', 'gpu_count': 4, 'gpu_devices': [{'name': 'NVIDIA GeForce GTX TITAN X', 'memory_total': 12804751360}, {'name': 'NVIDIA TITAN X (Pascal)', 'memory_total': 12788498432}, {'name': 'NVIDIA TITAN X (Pascal)', 'memory_total': 12788498432}, {'name': 'NVIDIA GeForce GTX TITAN X', 'memory_total': 12806127616}], 'memory': {'total': 62.70858383178711}}
+2024-09-30 16:33:23,590 INFO    HandlerThread:2081151 [system_monitor.py:probe():211] Finished collecting system info
+2024-09-30 16:33:23,590 INFO    HandlerThread:2081151 [system_monitor.py:probe():214] Publishing system info
+2024-09-30 16:33:23,590 DEBUG   HandlerThread:2081151 [system_info.py:_save_pip():52] Saving list of pip packages installed into the current environment
+2024-09-30 16:33:23,590 DEBUG   HandlerThread:2081151 [system_info.py:_save_pip():67] Saving pip packages done
+2024-09-30 16:33:23,590 DEBUG   HandlerThread:2081151 [system_info.py:_save_conda():75] Saving list of conda packages installed into the current environment
+2024-09-30 16:33:24,369 DEBUG   HandlerThread:2081151 [system_info.py:_save_conda():86] Saving conda packages done
+2024-09-30 16:33:24,370 INFO    HandlerThread:2081151 [system_monitor.py:probe():216] Finished publishing system info
+2024-09-30 16:33:24,372 DEBUG   SenderThread:2081151 [sender.py:send():375] send: files
+2024-09-30 16:33:24,373 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-metadata.json with policy now
+2024-09-30 16:33:24,379 DEBUG   SenderThread:2081151 [sender.py:send():375] send: telemetry
+2024-09-30 16:33:24,379 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: stop_status
+2024-09-30 16:33:24,380 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: stop_status
+2024-09-30 16:33:24,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-metadata.json
+2024-09-30 16:33:24,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:33:24,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/conda-environment.yaml
+2024-09-30 16:33:24,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/requirements.txt
+2024-09-30 16:33:25,039 INFO    wandb-upload_0:2081151 [upload_job.py:push():137] Uploaded file /tmp/tmpv6c9o161wandb/h4rvdcxn-wandb-metadata.json
+2024-09-30 16:33:25,489 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:27,489 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:28,026 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:29,489 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:31,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:33,035 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:33,490 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:35,491 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:37,491 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:38,039 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:39,377 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: stop_status
+2024-09-30 16:33:39,378 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: stop_status
+2024-09-30 16:33:39,492 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:41,493 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:43,041 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:45,494 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:47,494 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:48,065 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:49,494 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:51,495 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:53,118 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:33:53,495 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:53,496 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/config.yaml
+2024-09-30 16:33:54,377 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: stop_status
+2024-09-30 16:33:54,378 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: stop_status
+2024-09-30 16:33:55,496 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:57,496 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:57,943 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: partial_history
+2024-09-30 16:33:57,944 DEBUG   SenderThread:2081151 [sender.py:send():375] send: history
+2024-09-30 16:33:57,944 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: summary_record
+2024-09-30 16:33:57,945 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:33:58,029 DEBUG   SenderThread:2081151 [sender.py:send():375] send: config
+2024-09-30 16:33:58,399 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: log_artifact
+2024-09-30 16:33:58,400 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: log_artifact
+2024-09-30 16:33:58,497 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:33:58,497 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json
+2024-09-30 16:33:58,497 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table
+2024-09-30 16:33:58,498 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media
+2024-09-30 16:33:58,862 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: partial_history
+2024-09-30 16:33:59,195 INFO    wandb-upload_0:2081151 [upload_job.py:push():137] Uploaded file /tmp/tmpv6c9o161wandb/9islqoaw-media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json
+2024-09-30 16:33:59,293 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: log_artifact
+2024-09-30 16:33:59,325 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: partial_history
+2024-09-30 16:33:59,497 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:33:59,497 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_created():278] file/dir created: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table/Labels_table_2_574b21178d3f15900aec.table.json
+2024-09-30 16:33:59,498 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table
+2024-09-30 16:34:00,213 INFO    wandb-upload_1:2081151 [upload_job.py:push():137] Uploaded file /tmp/tmpv6c9o161wandb/f23kx3n6-media/table/Labels_table_2_574b21178d3f15900aec.table.json
+2024-09-30 16:34:00,687 INFO    wandb-upload_0:2081151 [upload_job.py:push():95] Uploaded file /home/user01/.local/share/wandb/artifacts/staging/tmp9ir48hn7
+2024-09-30 16:34:01,775 INFO    SenderThread:2081151 [sender.py:send_request_log_artifact():1438] logged artifact run-tzwcz58t-Predicted_table - {'id': 'QXJ0aWZhY3Q6MTI1NDIzNzc2NQ==', 'digest': 'f20f3b4c80c3d95e16044188cba3d5d4', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjQ2NDE2MzEyNQ==', 'latestArtifact': None}, 'version': 'latest'}
+2024-09-30 16:34:01,776 DEBUG   SenderThread:2081151 [sender.py:send():375] send: files
+2024-09-30 16:34:01,776 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:34:01,776 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json with policy now
+2024-09-30 16:34:01,776 DEBUG   SenderThread:2081151 [sender.py:send():375] send: history
+2024-09-30 16:34:01,777 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: summary_record
+2024-09-30 16:34:01,778 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:34:01,778 DEBUG   SenderThread:2081151 [sender.py:send():375] send: config
+2024-09-30 16:34:01,779 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: log_artifact
+2024-09-30 16:34:02,499 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:34:02,664 INFO    wandb-upload_4:2081151 [upload_job.py:push():137] Uploaded file /tmp/tmpv6c9o161wandb/5ntjkoor-media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json
+2024-09-30 16:34:03,583 INFO    wandb-upload_3:2081151 [upload_job.py:push():95] Uploaded file /home/user01/.local/share/wandb/artifacts/staging/tmpz8sf3bsa
+2024-09-30 16:34:04,579 INFO    SenderThread:2081151 [sender.py:send_request_log_artifact():1438] logged artifact run-tzwcz58t-Labels_table - {'id': 'QXJ0aWZhY3Q6MTI1NDIzNzgyMQ==', 'digest': '32374b94e611e936fc4f367598dac404', 'state': 'PENDING', 'aliases': [], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjQ2NDE2MzE0Ng==', 'latestArtifact': None}, 'version': 'latest'}
+2024-09-30 16:34:04,579 DEBUG   SenderThread:2081151 [sender.py:send():375] send: files
+2024-09-30 16:34:04,579 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file media/table/Labels_table_2_574b21178d3f15900aec.table.json with policy now
+2024-09-30 16:34:04,580 DEBUG   SenderThread:2081151 [sender.py:send():375] send: history
+2024-09-30 16:34:04,580 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: summary_record
+2024-09-30 16:34:04,582 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:34:05,347 INFO    wandb-upload_1:2081151 [upload_job.py:push():137] Uploaded file /tmp/tmpv6c9o161wandb/e9jixo27-media/table/Labels_table_2_574b21178d3f15900aec.table.json
+2024-09-30 16:34:05,500 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:34:07,501 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:34:07,583 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:34:09,378 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: stop_status
+2024-09-30 16:34:09,379 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: stop_status
+2024-09-30 16:34:09,757 DEBUG   SenderThread:2081151 [sender.py:send():375] send: exit
+2024-09-30 16:34:09,757 INFO    SenderThread:2081151 [sender.py:send_exit():598] handling exit code: 0
+2024-09-30 16:34:09,758 INFO    SenderThread:2081151 [sender.py:send_exit():600] handling runtime: 46
+2024-09-30 16:34:09,760 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:34:09,761 INFO    SenderThread:2081151 [sender.py:send_exit():606] send defer
+2024-09-30 16:34:09,761 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,761 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 0
+2024-09-30 16:34:09,761 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,761 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 0
+2024-09-30 16:34:09,761 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 1
+2024-09-30 16:34:09,762 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,762 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 1
+2024-09-30 16:34:09,762 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,762 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 1
+2024-09-30 16:34:09,762 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 2
+2024-09-30 16:34:09,762 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,762 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 2
+2024-09-30 16:34:09,762 INFO    HandlerThread:2081151 [system_monitor.py:finish():190] Stopping system monitor
+2024-09-30 16:34:09,763 DEBUG   SystemMonitor:2081151 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2024-09-30 16:34:09,763 DEBUG   SystemMonitor:2081151 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2024-09-30 16:34:09,763 INFO    HandlerThread:2081151 [interfaces.py:finish():202] Joined cpu monitor
+2024-09-30 16:34:09,763 INFO    HandlerThread:2081151 [interfaces.py:finish():202] Joined disk monitor
+2024-09-30 16:34:09,763 DEBUG   SystemMonitor:2081151 [system_monitor.py:_start():170] Publishing last batch of metrics
+2024-09-30 16:34:09,954 INFO    HandlerThread:2081151 [interfaces.py:finish():202] Joined gpu monitor
+2024-09-30 16:34:09,955 INFO    HandlerThread:2081151 [interfaces.py:finish():202] Joined memory monitor
+2024-09-30 16:34:09,955 INFO    HandlerThread:2081151 [interfaces.py:finish():202] Joined network monitor
+2024-09-30 16:34:09,955 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,955 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 2
+2024-09-30 16:34:09,955 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 3
+2024-09-30 16:34:09,956 DEBUG   SenderThread:2081151 [sender.py:send():375] send: stats
+2024-09-30 16:34:09,956 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,956 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 3
+2024-09-30 16:34:09,956 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,956 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 3
+2024-09-30 16:34:09,956 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 4
+2024-09-30 16:34:09,956 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,956 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 4
+2024-09-30 16:34:09,957 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,957 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 4
+2024-09-30 16:34:09,957 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 5
+2024-09-30 16:34:09,957 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,957 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 5
+2024-09-30 16:34:09,957 DEBUG   SenderThread:2081151 [sender.py:send():375] send: summary
+2024-09-30 16:34:09,958 INFO    SenderThread:2081151 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2024-09-30 16:34:09,958 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,958 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 5
+2024-09-30 16:34:09,958 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 6
+2024-09-30 16:34:09,958 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:09,958 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 6
+2024-09-30 16:34:09,958 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:09,958 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 6
+2024-09-30 16:34:09,962 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: status_report
+2024-09-30 16:34:10,239 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 7
+2024-09-30 16:34:10,239 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:10,239 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 7
+2024-09-30 16:34:10,240 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:10,240 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 7
+2024-09-30 16:34:10,502 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:34:10,502 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/config.yaml
+2024-09-30 16:34:10,758 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: poll_exit
+2024-09-30 16:34:10,864 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 8
+2024-09-30 16:34:10,864 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: poll_exit
+2024-09-30 16:34:10,865 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:10,865 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 8
+2024-09-30 16:34:10,865 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:10,865 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 8
+2024-09-30 16:34:10,866 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 9
+2024-09-30 16:34:10,866 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:10,866 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 9
+2024-09-30 16:34:10,866 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:10,866 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 9
+2024-09-30 16:34:10,866 INFO    SenderThread:2081151 [dir_watcher.py:finish():365] shutting down directory watcher
+2024-09-30 16:34:11,503 INFO    Thread-12 :2081151 [dir_watcher.py:_on_file_modified():295] file/dir modified: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:34:11,503 INFO    SenderThread:2081151 [dir_watcher.py:finish():395] scan: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files
+2024-09-30 16:34:11,504 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/conda-environment.yaml conda-environment.yaml
+2024-09-30 16:34:11,504 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log output.log
+2024-09-30 16:34:11,507 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/requirements.txt requirements.txt
+2024-09-30 16:34:11,507 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/config.yaml config.yaml
+2024-09-30 16:34:11,510 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json wandb-summary.json
+2024-09-30 16:34:11,514 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-metadata.json wandb-metadata.json
+2024-09-30 16:34:11,519 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json media/table/Predicted_table_1_f23073f64bff36fb6d4d.table.json
+2024-09-30 16:34:11,519 INFO    SenderThread:2081151 [dir_watcher.py:finish():409] scan save: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/media/table/Labels_table_2_574b21178d3f15900aec.table.json media/table/Labels_table_2_574b21178d3f15900aec.table.json
+2024-09-30 16:34:11,519 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 10
+2024-09-30 16:34:11,520 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:11,520 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 10
+2024-09-30 16:34:11,520 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:11,520 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 10
+2024-09-30 16:34:11,520 INFO    SenderThread:2081151 [file_pusher.py:finish():168] shutting down file pusher
+2024-09-30 16:34:11,759 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: poll_exit
+2024-09-30 16:34:11,759 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: poll_exit
+2024-09-30 16:34:12,026 INFO    wandb-upload_2:2081151 [upload_job.py:push():137] Uploaded file /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/output.log
+2024-09-30 16:34:12,214 INFO    wandb-upload_7:2081151 [upload_job.py:push():137] Uploaded file /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/conda-environment.yaml
+2024-09-30 16:34:12,253 INFO    wandb-upload_10:2081151 [upload_job.py:push():137] Uploaded file /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/config.yaml
+2024-09-30 16:34:12,266 INFO    wandb-upload_9:2081151 [upload_job.py:push():137] Uploaded file /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/requirements.txt
+2024-09-30 16:34:12,362 INFO    wandb-upload_11:2081151 [upload_job.py:push():137] Uploaded file /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/files/wandb-summary.json
+2024-09-30 16:34:12,562 INFO    Thread-11 :2081151 [sender.py:transition_state():626] send defer: 11
+2024-09-30 16:34:12,563 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:12,563 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 11
+2024-09-30 16:34:12,564 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:12,564 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 11
+2024-09-30 16:34:12,564 INFO    SenderThread:2081151 [file_pusher.py:join():173] waiting for file pusher
+2024-09-30 16:34:12,564 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 12
+2024-09-30 16:34:12,564 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:12,565 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 12
+2024-09-30 16:34:12,565 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:12,565 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 12
+2024-09-30 16:34:12,759 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: poll_exit
+2024-09-30 16:34:12,786 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 13
+2024-09-30 16:34:12,786 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: poll_exit
+2024-09-30 16:34:12,786 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:12,786 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 13
+2024-09-30 16:34:12,786 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:12,787 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 13
+2024-09-30 16:34:12,787 INFO    SenderThread:2081151 [sender.py:transition_state():626] send defer: 14
+2024-09-30 16:34:12,787 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: defer
+2024-09-30 16:34:12,787 DEBUG   SenderThread:2081151 [sender.py:send():375] send: final
+2024-09-30 16:34:12,787 INFO    HandlerThread:2081151 [handler.py:handle_request_defer():170] handle defer: 14
+2024-09-30 16:34:12,787 DEBUG   SenderThread:2081151 [sender.py:send():375] send: footer
+2024-09-30 16:34:12,788 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: defer
+2024-09-30 16:34:12,788 INFO    SenderThread:2081151 [sender.py:send_request_defer():622] handle sender defer: 14
+2024-09-30 16:34:12,788 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: poll_exit
+2024-09-30 16:34:12,789 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: poll_exit
+2024-09-30 16:34:12,789 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: poll_exit
+2024-09-30 16:34:12,790 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: poll_exit
+2024-09-30 16:34:12,790 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: server_info
+2024-09-30 16:34:12,790 DEBUG   SenderThread:2081151 [sender.py:send_request():402] send_request: server_info
+2024-09-30 16:34:12,793 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: get_summary
+2024-09-30 16:34:12,793 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: sampled_history
+2024-09-30 16:34:13,038 INFO    MainThread:2081151 [wandb_run.py:_footer_history_summary_info():3476] rendering history
+2024-09-30 16:34:13,038 INFO    MainThread:2081151 [wandb_run.py:_footer_history_summary_info():3508] rendering summary
+2024-09-30 16:34:13,038 INFO    MainThread:2081151 [wandb_run.py:_footer_sync_info():3434] logging synced files
+2024-09-30 16:34:13,039 DEBUG   HandlerThread:2081151 [handler.py:handle_request():144] handle_request: shutdown
+2024-09-30 16:34:13,039 INFO    HandlerThread:2081151 [handler.py:finish():845] shutting down handler
+2024-09-30 16:34:13,790 INFO    WriterThread:2081151 [datastore.py:close():298] close: /data_hdd1/hassan/projects/GPS/wandb/run-20240930_163322-tzwcz58t/run-tzwcz58t.wandb
+2024-09-30 16:34:14,038 INFO    SenderThread:2081151 [sender.py:finish():1550] shutting down sender
+2024-09-30 16:34:14,038 INFO    SenderThread:2081151 [file_pusher.py:finish():168] shutting down file pusher
+2024-09-30 16:34:14,038 INFO    SenderThread:2081151 [file_pusher.py:join():173] waiting for file pusher
