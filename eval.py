@@ -56,7 +56,7 @@ model.eval()
 labels = []
 preds = []
 print("Epoch Done")
-running_vloss = 0.
+running_vloss = 0.0
 with torch.no_grad():
     for i, vdata in enumerate(validation_loader):
         try:

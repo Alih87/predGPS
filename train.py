@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import SGD
 import matplotlib.pyplot as plt
-import wandb.plot
 from GI_NN import GI_NN
-from dataloader import IMUDataset
+from torch.utils.data import DataLoader
+from dataloader import IMUDataset, collate_fn
 import wandb, datetime
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -16,7 +16,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 15
+SEQ_LEN = 51
+INPUT_SIZE = 9
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -42,8 +43,8 @@ def extract_txt(file_path):
     return X, y
 
 def train_one_epoch():
-    running_loss = 0.
-    last_loss = 0.
+    running_loss = 0.0
+    last_loss = 0.0
     for i, data in enumerate(training_loader):
         try:
             X, y = data
@@ -72,29 +73,41 @@ def train_one_epoch():
 Xt, yt = extract_txt(train_path)
 Xv, yv = extract_txt(val_path)
 
-scaler_train = MinMaxScaler()
-scaler_val = MinMaxScaler()
+scaler_ytrain = MinMaxScaler()
+scaler_yval = MinMaxScaler()
 
-Xt = normalize_data(Xt)
-Xv = normalize_data(Xv)
+scaler_Xtrain = MinMaxScaler()
+scaler_xval = MinMaxScaler()
 
-yt = scaler_train.fit_transform(yt)
-yv = scaler_val.fit_transform(yv)
+# Xt = normalize_data(Xt)
+# Xv = normalize_data(Xv)
 
-training_loader = IMUDataset(Xt, yt, seq_len=SEQ_LEN)
-validation_loader = IMUDataset(Xv, yv, seq_len=SEQ_LEN)
+scaler_Xtrain = MinMaxScaler()
+scaler_Xval = MinMaxScaler()
 
-model = GI_NN(output_channels=2, SEQ_LEN=SEQ_LEN)
+Xt = scaler_Xtrain.fit_transform(Xt)
+Xv = scaler_Xval.fit_transform(Xv)
+
+# yt = scaler_ytrain.fit_transform(yt)
+# yv = scaler_yval.fit_transform(yv)
+
+yt = (np.asanyarray(yt) * 1000).tolist()
+yv = (np.asanyarray(yv) * 1000).tolist()
+
+training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN), batch_size=4, shuffle=True)
+validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN), batch_size=1, shuffle=False)
+
+model = GI_NN(input_size=INPUT_SIZE, output_channels=2, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
 model = model.cuda().float()
 model.train()
-optimizer = SGD(model.parameters(), lr = 1e-2, momentum=0.9)
+optimizer = SGD(model.parameters(), lr = 1e-4, momentum=0.9)
 loss_fn = nn.MSELoss()
 
 if __name__ == '__main__':
-    wandb.init(project="GINN")
+    wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 20
+    EPOCH = 200
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
@@ -103,23 +116,59 @@ if __name__ == '__main__':
     for epoch in range(EPOCH):
         labels = []
         preds = []
+        px, py = [], []
+        lx, ly = [], []
         avg_loss = train_one_epoch()
         print("Epoch Done")
-        running_vloss = 0.
+        running_vloss = 0.0
         with torch.no_grad():
             for i, vdata in enumerate(validation_loader):
-                vX, vy = vdata
-                vX = vX.cuda().float()
-                vy = vy.cuda().float()
-                vX.to(DEVICE)
-                vy.to(DEVICE)
-                vy_ = model(vX)
-                labels.append(scaler_val.inverse_transform([vy.cpu().tolist()]))
-                preds.append(scaler_val.inverse_transform([vy_.cpu().tolist()]))
-                vloss = loss_fn(vy_, vy)
-                running_vloss += vloss
+                try:
+                    vX, vy = vdata
+                    vX = vX.cuda().float()
+                    vy = vy.cuda().float()
+                    vX.to(DEVICE)
+                    vy.to(DEVICE)
+                    vy_ = model(vX)
+                    if len(vy_.shape) < 2:
+                        vy_ = torch.unsqueeze(vy_, dim=0)
+                    # labels.append(scaler_yval.inverse_transform(vy.cpu().tolist()))
+                    # preds.append(scaler_yval.inverse_transform(vy_.cpu().tolist()))
+                    labels.append((vy.cpu() / 1000).tolist())
+                    preds.append((vy_.cpu() / 1000).tolist())
+                    vloss = loss_fn(vy_, vy)
+                    running_vloss += vloss
+
+                except RuntimeError:
+                    print("[INFO] Not enough data, proceeding...")
+                    break
+        
+        for idx, p in enumerate(preds):
+            if idx == 0:
+                px.append(p[0][0])
+                py.append(p[0][1])
+            else:
+                px.append(px[idx-1] + p[0][0])
+                py.append(py[idx-1] + p[0][1])
+        
+        for idx, l in enumerate(labels):
+            if idx == 0:
+                lx.append(l[0][0])
+                ly.append(l[0][1])
+            else:
+                lx.append(lx[idx-1] + l[0][0])
+                ly.append(ly[idx-1] + l[0][1])
+
+        data1 = [[x,y] for (x,y) in zip(px, py)]
+        table1 = wandb.Table(data=data1, columns=["Easting", "Northing"])
+        wandb.log({"Predicted": wandb.plot.scatter(table1, "Easting", "Northing")})
+
+        data2 = [[x,y] for (x,y) in zip(lx, ly)]
+        table2 = wandb.Table(data=data2, columns=["Easting", "Northing"])
+        wandb.log({"Labels": wandb.plot.scatter(table2, "Easting", "Northing")})
+            
         avg_vloss = running_vloss / (i+1)
-        print(f"Loss train {avg_loss}, validation {avg_vloss}")
+        print(f"[EPOCH {epoch}] Loss train {avg_loss}, validation {avg_vloss}")
         train_loss.append(avg_loss)
         val_loss.append(avg_vloss)
 
@@ -170,7 +219,6 @@ if __name__ == '__main__':
         yy += l[0][1]
 
     # print(xx, yy)
-
     # plt.plot(train_loss)
     # plt.title("Training Loss")
     # plt.xlabel("Epochs")
