@@ -11,6 +11,9 @@ class GI_NN(nn.Module):
         self.seq_len = SEQ_LEN
         self.gnn = nn.GRU(256, 128, 30, batch_first=True, bidirectional=False)
         self.first_layer = nn.Conv1d(self.input_size, 256, 1)
+        self.second_layer = nn.Conv1d(256, 512, 1)
+        self.third_layer = nn.Conv1d(512, 512, 1)
+        self.fourth_layer = nn.Conv1d(512, 256, 1)
         self.fc = nn.Linear(128, 64)
         self.drop_out = nn.Dropout(0.1)
         self.last_layer = nn.Linear(64, output_channels)
@@ -27,9 +30,15 @@ class GI_NN(nn.Module):
         # x = x.transpose(1, 2)
         a = self.first_layer(x)
         a = self.relu(a)
-        a = a.permute(0, 2, 1)
+        a1 = self.second_layer(a)
+        a1 = self.relu(a1)
+        a2 = self.third_layer(a1)
+        a2 = self.relu(a2)
+        a3 = self.fourth_layer(a2)
+        a3 = self.relu(a3)
+        a3 = a3.permute(0, 2, 1)
         # print(a.shape)
-        b = self.gnn(a)
+        b = self.gnn(a3)
         # print(b[0].shape)
         c = self.fc(torch.mean(b[0],dim=1))
         c = self.relu(c)
@@ -45,15 +54,15 @@ if __name__ == '__main__':
     os.chdir("/data_hdd1/hassan/projects/GPS")
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    SEQ_LEN = 7
-    INPUT_SIZE = 9
+    SEQ_LEN = 14
+    INPUT_SIZE = 11
 
     model = GI_NN(input_size=INPUT_SIZE, output_channels=2, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)
 
-    x = torch.randn(4, 9, SEQ_LEN).to(DEVICE)
+    x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)
     out = model(x)
-    print(out)
+    # print(out.shape)
     # dot = make_dot(out.mean(), params=dict(model.named_parameters()))
     # dot.format ="png"
     # dot.render("model_arch")
