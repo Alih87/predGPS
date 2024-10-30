@@ -23,12 +23,18 @@ class IMUDataset(Dataset):
 
     def __getitem__(self, idx):
         X = torch.tensor(self.X[idx:idx+self.seq_len], dtype=torch.float).T
-        Y = torch.tensor(self.y[idx:idx+self.seq_len], dtype=torch.float64).T
+        Y = torch.tensor(self.y[idx:idx+self.seq_len], dtype=torch.float).T
         for i in range(Y.shape[1]):
-            Y[:,i][0] = Y[:,i][0] - self.scaler_x
-            Y[:,i][1] = Y[:,i][1] - self.scaler_y
+            Y[:,i][0] = Y[:,i][0]
+            Y[:,i][1] = Y[:,i][1]
+            # if i == 0:
+            #     Y[:,i][0] = 0.0
+            #     Y[:,i][1] = 0.0
+            # else:
+            #     Y[:,i][0] = (Y1[:,i][0] - Y1[:,i-1][0]) * 1000
+            #     Y[:,i][1] = (Y1[:,i][1] - Y1[:,i-1][1]) * 1000
         X = torch.cat([X, Y], dim=0)
-        return (X, Y[:,-1])
+        return (X, torch.sum(Y, dim=-1))
         # return (torch.unsqueeze(torch.tensor(self.X[idx:idx+self.seq_len], dtype=torch.float).T, dim=0), torch.tensor(np.sum(self.y[idx:idx+self.seq_len], axis=0), dtype=torch.float64))
 
 if __name__ == '__main__':
@@ -47,10 +53,11 @@ if __name__ == '__main__':
         y.append(pt[:2])
 
     dataset = IMUDataset(X, y, seq_len=7, scaler=y[0])
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=collate_fn)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=False)
     for i, data in enumerate(dataloader):
         X, y = data
-        print(X.shape, y.shape)
+        # print(X.shape, y.shape)
+        print(y)
         break
     # pt = next(iter(dataset))
     # print(pt[0].shape)
