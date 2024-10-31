@@ -16,7 +16,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 27
+SEQ_LEN = 14
 INPUT_SIZE = 11
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
 
@@ -30,7 +30,7 @@ def normalize_data(X):
 def extract_txt(file_path):
     points = []
     X, y = [], []
-
+ 
     with open(file_path, 'r') as f:
         line = f.readlines()
         f.close()
@@ -39,7 +39,7 @@ def extract_txt(file_path):
         points.append(pt)
     for pt in points:
         X.append(pt[2:])
-        y.append(pt[:2])
+        y.append(pt[:2]+[pt[4]])
 
     return X, y
 
@@ -85,11 +85,11 @@ yv = (np.asanyarray(yv)).tolist()
 training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, scaler=yt[0]), batch_size=128, shuffle=True)
 validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, scaler=yv[0]), batch_size=32, shuffle=False)
 
-model = GI_NN(input_size=INPUT_SIZE, output_channels=2, SEQ_LEN=SEQ_LEN)
+model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
 model = model.cuda().float()
 model.train()
-optimizer = Adam(model.parameters(), lr = 1e-2)
+optimizer = Adam(model.parameters(), lr = 1e-3)
 loss_fn = nn.SmoothL1Loss()
 
 if __name__ == '__main__':
@@ -120,13 +120,13 @@ if __name__ == '__main__':
                     vX.to(DEVICE)
                     vy.to(DEVICE)
                     vy_ = model(vX)
-                    if len(vy_.shape) < 2 and len(vy.shape) < 2:
+                    if len(vy_.shape) < 2 or len(vy.shape) < 2:
                         vy_ = torch.unsqueeze(vy_, dim=0)
                         vy = torch.unsqueeze(vy, dim=0)
                     vy_cpu = scaler_yval.inverse_transform(vy_.cpu())
                     vycpu = scaler_yval.inverse_transform(vy.cpu())
-                    labels.extend(vycpu.tolist())
-                    preds.extend(vy_cpu.tolist())
+                    labels.extend(vycpu.tolist()[:-1])
+                    preds.extend(vy_cpu.tolist()[:-1])
                     vloss = loss_fn(vy_, vy)
                     print(f"Batch number {ii+1} loss: {vloss}")
                     running_vloss += vloss.item()
@@ -179,11 +179,8 @@ if __name__ == '__main__':
     wandb.log({"Labels": wandb.plot.scatter(table2, "Easting", "Northing")})
 
     os.mkdir(f"results/{time_stamp}")
-
-    plt.title('Predicted')
+    plt.title('Trajectory Comparison')
     plt.plot(px, py)
-    plt.savefig(f"results/{time_stamp}/predicted.png")
-
-    plt.title('Labels')
     plt.plot(lx, ly)
-    plt.savefig(f"results/{time_stamp}/labels.png")
+    plt.legend(["Predicted", "Labels"])
+    plt.savefig(f"results/{time_stamp}/trajectories.png")

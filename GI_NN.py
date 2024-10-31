@@ -25,24 +25,26 @@ class GI_NN(nn.Module):
 
     def forward(self, x):
         a = self.first_layer(x)
-        a = self.relu(a)
         a = self.batch_norm_first(a)
+        a = self.relu(a)
         a1 = self.second_layer(a)
-        a1 = self.relu(a1)
         a1 = self.batch_norm_second(a1)
+        a1 = self.relu(a1)
         a2 = self.third_layer(a1)
-        a2 = self.relu(a2)
         a2 = self.batch_norm_third(a2)
+        a2 = self.relu(a2)
         a3 = self.fourth_layer(a2)
-        a3 = self.relu(a3)
         a3 = self.batch_norm_fourth(a3)
+        a3 = self.relu(a3)
         a3 = a3.permute(0, 2, 1)
         b = self.gnn(a3)
-        c = self.fc(torch.mean(b[0],dim=1))
+        c = self.fc(b[0][:, -1, :])
         c = self.relu(c)
         d = self.drop_out(c)
         z = self.last_layer(d)
+        
         z = torch.squeeze(z, dim=0)
+        
         return z.cuda().float()
 
 if __name__ == '__main__':
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     SEQ_LEN = 14
     INPUT_SIZE = 11
 
-    model = GI_NN(input_size=INPUT_SIZE, output_channels=2, SEQ_LEN=SEQ_LEN)
+    model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)
 
     x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)

@@ -24,24 +24,28 @@ class IMUDataset(Dataset):
     def __getitem__(self, idx):
         X = torch.tensor(self.X[idx:idx+self.seq_len], dtype=torch.float).T
         Y = torch.tensor(self.y[idx:idx+self.seq_len], dtype=torch.float).T
-        for i in range(Y.shape[1]):
-            Y[:,i][0] = Y[:,i][0]
-            Y[:,i][1] = Y[:,i][1]
-            # if i == 0:
-            #     Y[:,i][0] = 0.0
-            #     Y[:,i][1] = 0.0
-            # else:
-            #     Y[:,i][0] = (Y1[:,i][0] - Y1[:,i-1][0]) * 1000
-            #     Y[:,i][1] = (Y1[:,i][1] - Y1[:,i-1][1]) * 1000
-        X = torch.cat([X, Y], dim=0)
-        return (X, torch.sum(Y, dim=-1))
+        if idx + self.seq_len + 1 < len(self.X):
+            y = torch.tensor([
+                self.y[idx][0] + self.y[idx + self.seq_len + 1][0],
+                self.y[idx][1] + self.y[idx + self.seq_len + 1][1],
+                self.y[idx][2] + self.y[idx + self.seq_len + 1][2]
+            ], dtype=torch.float)
+
+        else:
+            y = torch.tensor([
+                self.y[idx][0] + self.y[-1][0],
+                self.y[idx][1] + self.y[-1][1],
+                self.y[idx][2] + self.y[-1][2]
+            ], dtype=torch.float)
+        X = torch.cat([X, Y[:-1]], dim=0)
+        return (X, y)
         # return (torch.unsqueeze(torch.tensor(self.X[idx:idx+self.seq_len], dtype=torch.float).T, dim=0), torch.tensor(np.sum(self.y[idx:idx+self.seq_len], axis=0), dtype=torch.float64))
 
 if __name__ == '__main__':
     points = []
     X, y = [], []
     
-    file_path = "data/data.txt"
+    file_path = "data/data_fallback.txt"
     with open(file_path, 'r') as f:
         line = f.readlines()
         f.close()
@@ -50,14 +54,13 @@ if __name__ == '__main__':
         points.append(pt)
     for pt in points:
         X.append(pt[2:])
-        y.append(pt[:2])
+        y.append(pt[:2]+[pt[4]])
 
     dataset = IMUDataset(X, y, seq_len=7, scaler=y[0])
     dataloader = DataLoader(dataset, batch_size=16, shuffle=False)
     for i, data in enumerate(dataloader):
         X, y = data
         # print(X.shape, y.shape)
-        print(y)
         break
     # pt = next(iter(dataset))
     # print(pt[0].shape)
