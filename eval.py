@@ -5,7 +5,7 @@ from torch.optim import SGD
 import matplotlib.pyplot as plt
 import wandb.plot
 from GI_NN import GI_NN
-from dataloader import IMUDataset
+from utils import IMUDataset
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 

@@ -5,10 +5,11 @@ from torch.optim import SGD, Adam
 import matplotlib.pyplot as plt
 from GI_NN import GI_NN
 from torch.utils.data import DataLoader
-from dataloader import IMUDataset, collate_fn
+from utils import IMUDataset, GPSLoss
 import wandb, datetime
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -19,6 +20,8 @@ val_path = "data/val.txt"
 SEQ_LEN = 14
 INPUT_SIZE = 11
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
+BATCH_SIZE_TRAIN = 128
+BATCH_SIZE_VAL = 32
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -82,15 +85,15 @@ yv = scaler_yval.fit_transform(yv)
 yt = (np.asanyarray(yt)).tolist()
 yv = (np.asanyarray(yv)).tolist()
 
-training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, scaler=yt[0]), batch_size=128, shuffle=True)
-validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, scaler=yv[0]), batch_size=32, shuffle=False)
+training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
+validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
 model = model.cuda().float()
 model.train()
 optimizer = Adam(model.parameters(), lr = 1e-3)
-loss_fn = nn.SmoothL1Loss()
+loss_fn = GPSLoss(x_bias=0.33, y_bias=0.56, yaw_bias=0.11)
 
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
@@ -103,8 +106,10 @@ if __name__ == '__main__':
     best_vloss = 99999
     for epoch in range(EPOCH):
         model.train()
-        labels = []
-        preds = []
+        labels_acc = deque(maxlen=BATCH_SIZE_VAL)
+        preds_acc = deque(maxlen=BATCH_SIZE_VAL)
+        labels_tmp, preds_tmp = [], []
+        labels, preds = [[0,0]], [[0,0]]
         px, py = [], []
         lx, ly = [], []
         avg_loss = train_one_epoch()
@@ -123,17 +128,23 @@ if __name__ == '__main__':
                     if len(vy_.shape) < 2 or len(vy.shape) < 2:
                         vy_ = torch.unsqueeze(vy_, dim=0)
                         vy = torch.unsqueeze(vy, dim=0)
-                    vy_cpu = scaler_yval.inverse_transform(vy_.cpu())
-                    vycpu = scaler_yval.inverse_transform(vy.cpu())
-                    labels.extend(vycpu.tolist()[:-1])
-                    preds.extend(vy_cpu.tolist()[:-1])
+                    vy_cpu, vycpu = vy_.cpu()[:,:-1], vy.cpu()[:,:-1]
+                    
+                    # Adding the predicted increments to the previous value
+                    labels_tmp.extend([vycpu.tolist()]), labels_acc.extend(vycpu.tolist())
+                    preds_tmp.extend([vy_cpu.tolist()]), preds_acc.extend(vy_cpu.tolist())
+                    preds_acc.extendleft([preds[-1]]), labels_acc.extendleft([labels[-1]])
+
+
+                    vy_cpu = scaler_yval.inverse_transform(vy_cpu)
+                    vycpu = scaler_yval.inverse_transform(vycpu)
                     vloss = loss_fn(vy_, vy)
                     print(f"Batch number {ii+1} loss: {vloss}")
                     running_vloss += vloss.item()
 
                 except RuntimeError:
                     print("[INFO] Not enough data, proceeding...")
-            
+            break
         avg_vloss = running_vloss / (ii+1)
         print(f"[EPOCH {epoch}] Loss train {avg_loss}, validation {avg_vloss}")
         train_loss.append(avg_loss)
