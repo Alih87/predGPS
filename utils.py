@@ -16,7 +16,8 @@ class IMUDataset(Dataset):
         self.X = X
         self.y = y
         self.seq_len = seq_len
-        self.scaler_x, self.scaler_y = scaler[0], scaler[1]
+        if scaler is not None:
+            self.scaler_x, self.scaler_y = scaler[0], scaler[1]
 
     def __len__(self):
         return (len(self.X) - (self.seq_len + 1))

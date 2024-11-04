@@ -12,16 +12,16 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 14
+SEQ_LEN = 38
 INPUT_SIZE = 11
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
-BATCH_SIZE_TRAIN = 128
-BATCH_SIZE_VAL = 32
+BATCH_SIZE_TRAIN = 256
+BATCH_SIZE_VAL = 256
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -98,7 +98,7 @@ loss_fn = GPSLoss(x_bias=0.33, y_bias=0.56, yaw_bias=0.11)
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 100
+    EPOCH = 60
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
@@ -106,10 +106,9 @@ if __name__ == '__main__':
     best_vloss = 99999
     for epoch in range(EPOCH):
         model.train()
-        labels_acc = deque(maxlen=BATCH_SIZE_VAL)
-        preds_acc = deque(maxlen=BATCH_SIZE_VAL)
-        labels_tmp, preds_tmp = [], []
-        labels, preds = [[0,0]], [[0,0]]
+        labels, preds = list(), list()
+        preds.append([0,0,0])
+        labels.append([0,0,0])
         px, py = [], []
         lx, ly = [], []
         avg_loss = train_one_epoch()
@@ -128,23 +127,26 @@ if __name__ == '__main__':
                     if len(vy_.shape) < 2 or len(vy.shape) < 2:
                         vy_ = torch.unsqueeze(vy_, dim=0)
                         vy = torch.unsqueeze(vy, dim=0)
-                    vy_cpu, vycpu = vy_.cpu()[:,:-1], vy.cpu()[:,:-1]
-                    
-                    # Adding the predicted increments to the previous value
-                    labels_tmp.extend([vycpu.tolist()]), labels_acc.extend(vycpu.tolist())
-                    preds_tmp.extend([vy_cpu.tolist()]), preds_acc.extend(vy_cpu.tolist())
-                    preds_acc.extendleft([preds[-1]]), labels_acc.extendleft([labels[-1]])
-
-
-                    vy_cpu = scaler_yval.inverse_transform(vy_cpu)
-                    vycpu = scaler_yval.inverse_transform(vycpu)
+                    vy_cpu, vycpu = vy_.cpu().tolist(), vy.cpu().tolist()
+                    for i in range(vy.shape[0]):
+                        preds.append([
+                            vy_cpu[i][0] + preds[-1][0],
+                            vy_cpu[i][1] + preds[-1][1],
+                            vy_cpu[i][2] + preds[-1][2],
+                            ])
+                        labels.append([
+                            vycpu[i][0] + labels[-1][0],
+                            vycpu[i][1] + labels[-1][1],
+                            vycpu[i][2] + labels[-1][2],
+                            ])
                     vloss = loss_fn(vy_, vy)
                     print(f"Batch number {ii+1} loss: {vloss}")
                     running_vloss += vloss.item()
 
                 except RuntimeError:
                     print("[INFO] Not enough data, proceeding...")
-            break
+        preds = scaler_yval.inverse_transform(preds).tolist()
+        labels = scaler_yval.inverse_transform(labels).tolist()
         avg_vloss = running_vloss / (ii+1)
         print(f"[EPOCH {epoch}] Loss train {avg_loss}, validation {avg_vloss}")
         train_loss.append(avg_loss)
@@ -165,21 +167,13 @@ if __name__ == '__main__':
     
     px, py = [], []
     for idx, p in enumerate(preds):
-        if idx == 0:
-            px.append(p[0])
-            py.append(p[1])
-        else:
-            px.append(px[idx-1] + p[0])
-            py.append(py[idx-1] + p[1])
+        px.append(p[0])
+        py.append(p[1])
     
     lx, ly = [], []
     for idx, l in enumerate(labels):
-        if idx == 0:
-            lx.append(l[0])
-            ly.append(l[1])
-        else:
-            lx.append(lx[idx-1] + l[0])
-            ly.append(ly[idx-1] + l[1])
+        lx.append(l[0])
+        ly.append(l[1])
 
     data1 = [[x,y] for (x,y) in zip(px, py)]
     table1 = wandb.Table(data=data1, columns=["Easting", "Northing"])
@@ -190,6 +184,12 @@ if __name__ == '__main__':
     wandb.log({"Labels": wandb.plot.scatter(table2, "Easting", "Northing")})
 
     os.mkdir(f"results/{time_stamp}")
+
+    with open(f"results/{time_stamp}/preds.txt", 'w') as f:
+        for x,y in zip(px,py):
+            f.write(str(x)+","+str(y)+"\n")
+        f.close()
+
     plt.title('Trajectory Comparison')
     plt.plot(px, py)
     plt.plot(lx, ly)

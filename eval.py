@@ -15,6 +15,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
+SEQ_LEN = 38
+INPUT_SIZE = 11
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
 
@@ -39,16 +42,18 @@ def extract_txt(file_path):
     return X, y
 
 Xv, yv = extract_txt(train_path)
-Xv = normalize_data(Xv)
 
-scaler_val = MinMaxScaler()
+scaler_val = MinMaxScaler((-1,1))
 yv = scaler_val.fit_transform(yv)
 
-validation_loader = IMUDataset(Xv, yv, seq_len=7)
+scaler_Xval = MinMaxScaler((-1,1))
+Xv = scaler_Xval.fit_transform(Xv)
+
+validation_loader = IMUDataset(Xv, yv, seq_len=SEQ_LEN)
 
 
-model = GI_NN(output_channels=2)
-model.load_state_dict(torch.load("chkpts/20240927_144411/model_20240927_144411_19.pth"))
+model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
+model.load_state_dict(torch.load("chkpts/20241104_145134/model_20241104_145134_53.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
 model.eval()
@@ -66,38 +71,44 @@ with torch.no_grad():
             vX.to(DEVICE)
             vy.to(DEVICE)
             vy_ = model(vX)
-            labels.append(scaler_val.inverse_transform([vy.cpu().tolist()]))
-            preds.append(scaler_val.inverse_transform([vy_.cpu().tolist()]))
+            if len(vy_.shape) < 2 or len(vy.shape) < 2:
+                vy_ = torch.unsqueeze(vy_, dim=0)
+                vy = torch.unsqueeze(vy, dim=0)
+            print(vy_.shape, vy.shape)
+            vy_cpu, vycpu = vy_.cpu().tolist(), vy.cpu().tolist()
+            for i in range(vy.shape[0]):
+                preds.append([
+                    vy_cpu[i][0] + preds[-1][0],
+                    vy_cpu[i][1] + preds[-1][1],
+                    vy_cpu[i][2] + preds[-1][2],
+                    ])
+                labels.append([
+                    vycpu[i][0] + labels[-1][0],
+                    vycpu[i][1] + labels[-1][1],
+                    vycpu[i][2] + labels[-1][2],
+                    ])
         except:
             print("[INFO] Not enough data, proceeding...")
             break
-    
+
+preds = scaler_val.inverse_transform(preds).tolist()
+labels = scaler_val.inverse_transform(labels).tolist()
+
 px, py = [], []
 for idx, p in enumerate(preds):
-    if idx == 0:
-        print(p)
-        px.append(p[0][0])
-        py.append(p[0][1])
-    else:
-        px.append(px[idx-1] + p[0][0])
-        py.append(py[idx-1] + p[0][1])
+    px.append(p[0][0])
+    py.append(p[0][1])
 
 lx, ly = [], []
 for idx, l in enumerate(labels):
-    if idx == 0:
-        lx.append(l[0][0])
-        ly.append(l[0][1])
-    else:
-        lx.append(lx[idx-1] + l[0][0])
-        ly.append(ly[idx-1] + l[0][1])
+    lx.append(l[0][0])
+    ly.append(l[0][1])
 
 xx = 0
 yy = 0
 for p in preds:
     xx += p[0][0]
     yy += p[0][1]
-
-print(xx, yy)
 
 plt.plot(px, py)
 plt.show()

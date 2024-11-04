@@ -8,7 +8,7 @@ class GI_NN(nn.Module):
         super(GI_NN, self).__init__()
         self.input_size = input_size
         self.seq_len = SEQ_LEN
-        self.gnn = nn.GRU(256, 128, 30, batch_first=True, bidirectional=False)
+        self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
         self.first_layer = nn.Conv1d(self.input_size, 256, 1)
         self.second_layer = nn.Conv1d(256, 512, 1)
         self.third_layer = nn.Conv1d(512, 512, 1)
@@ -37,9 +37,9 @@ class GI_NN(nn.Module):
         a3 = self.batch_norm_fourth(a3)
         a3 = self.relu(a3)
         a3 = a3.permute(0, 2, 1)
-        b = self.gnn(a3)
-        c = self.fc(b[0][:, -1, :])
-        c = self.relu(c)
+        b,_ = self.gnn(a3)
+        c = self.fc(b[:, -1, :])
+        c = self.tanh(c)
         d = self.drop_out(c)
         z = self.last_layer(d)
         
