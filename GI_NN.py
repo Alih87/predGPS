@@ -13,7 +13,7 @@ class GI_NN(nn.Module):
         self.second_layer = nn.Conv1d(256, 512, 1)
         self.third_layer = nn.Conv1d(512, 512, 1)
         self.fourth_layer = nn.Conv1d(512, 256, 1)
-        self.fc = nn.Linear(128, 64)
+        self.fc = nn.Linear(256, 64)
         self.drop_out = nn.Dropout(0.1)
         self.last_layer = nn.Linear(64, output_channels)
         self.relu = nn.ReLU()

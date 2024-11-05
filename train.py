@@ -12,12 +12,12 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 38
+SEQ_LEN = 56
 INPUT_SIZE = 11
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
 BATCH_SIZE_TRAIN = 256

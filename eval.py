@@ -15,7 +15,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 38
+SEQ_LEN = 24
 INPUT_SIZE = 11
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -48,6 +48,8 @@ yv = scaler_val.fit_transform(yv)
 
 scaler_Xval = MinMaxScaler((-1,1))
 Xv = scaler_Xval.fit_transform(Xv)
+
+yv = (np.asanyarray(yv)).tolist()
 
 validation_loader = IMUDataset(Xv, yv, seq_len=SEQ_LEN)
 
