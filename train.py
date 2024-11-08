@@ -3,25 +3,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import SGD, Adam
 import matplotlib.pyplot as plt
-from GI_NN import GI_NN
+from GI_NN_Mod import GI_NN
 from torch.utils.data import DataLoader
-from utils import IMUDataset, GPSLoss
+from utils import IMUDataset, DirectionalGPSLoss, GPSLoss, RecentAndFinalLoss
+
 import wandb, datetime
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 56
-INPUT_SIZE = 11
+SEQ_LEN = 38
+INPUT_SIZE = 14
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
-BATCH_SIZE_TRAIN = 256
-BATCH_SIZE_VAL = 256
+BATCH_SIZE_TRAIN = 512
+BATCH_SIZE_VAL = 512
+ANCHORS = 7
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -42,11 +44,11 @@ def extract_txt(file_path):
         points.append(pt)
     for pt in points:
         X.append(pt[2:])
-        y.append(pt[:2]+[pt[4]])
+        y.append(pt[:2])
 
     return X, y
 
-def train_one_epoch():
+def train_one_epoch(anchors):
     running_loss = 0.0
     last_loss = 0.0
     for i, data in enumerate(training_loader):
@@ -57,8 +59,7 @@ def train_one_epoch():
             X.to(DEVICE)
             y.to(DEVICE)
             optimizer.zero_grad()
-            y_ = model(X)
-            loss = loss_fn(y_, y)
+            loss, y_ = model(X, y)
             loss.backward()
 
             optimizer.step()
@@ -85,20 +86,20 @@ yv = scaler_yval.fit_transform(yv)
 yt = (np.asanyarray(yt)).tolist()
 yv = (np.asanyarray(yv)).tolist()
 
-training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
-validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
+training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
+validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=None, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
 
-model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
+model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
 model = model.cuda().float()
 model.train()
 optimizer = Adam(model.parameters(), lr = 1e-3)
-loss_fn = GPSLoss(x_bias=0.33, y_bias=0.56, yaw_bias=0.11)
+loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 60
+    EPOCH = 70
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
@@ -107,11 +108,11 @@ if __name__ == '__main__':
     for epoch in range(EPOCH):
         model.train()
         labels, preds = list(), list()
-        preds.append([0,0,0])
-        labels.append([0,0,0])
+        preds.append([0,0])
+        labels.append([0,0])
         px, py = [], []
         lx, ly = [], []
-        avg_loss = train_one_epoch()
+        avg_loss = train_one_epoch(anchors=ANCHORS)
         print("Epoch Done")
         running_vloss = 0.0
         model.eval()
@@ -131,22 +132,20 @@ if __name__ == '__main__':
                     for i in range(vy.shape[0]):
                         preds.append([
                             vy_cpu[i][0] + preds[-1][0],
-                            vy_cpu[i][1] + preds[-1][1],
-                            vy_cpu[i][2] + preds[-1][2],
-                            ])
+                            vy_cpu[i][1] + preds[-1][1]
+                                     ])
                         labels.append([
                             vycpu[i][0] + labels[-1][0],
-                            vycpu[i][1] + labels[-1][1],
-                            vycpu[i][2] + labels[-1][2],
-                            ])
+                            vycpu[i][1] + labels[-1][1]
+                                      ])
                     vloss = loss_fn(vy_, vy)
                     print(f"Batch number {ii+1} loss: {vloss}")
                     running_vloss += vloss.item()
 
                 except RuntimeError:
                     print("[INFO] Not enough data, proceeding...")
-        preds = scaler_yval.inverse_transform(preds).tolist()
-        labels = scaler_yval.inverse_transform(labels).tolist()
+        preds = scaler_ytrain.inverse_transform(preds).tolist()
+        labels = scaler_ytrain.inverse_transform(labels).tolist()
         avg_vloss = running_vloss / (ii+1)
         print(f"[EPOCH {epoch}] Loss train {avg_loss}, validation {avg_vloss}")
         train_loss.append(avg_loss)

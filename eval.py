@@ -4,19 +4,21 @@ import torch.nn.functional as F
 from torch.optim import SGD
 import matplotlib.pyplot as plt
 import wandb.plot
-from GI_NN import GI_NN
+from GI_NN_Mod import GI_NN
 from utils import IMUDataset
+from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 24
-INPUT_SIZE = 11
+SEQ_LEN = 38
+INPUT_SIZE = 14
+ANCHOR = 7
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -41,29 +43,36 @@ def extract_txt(file_path):
 
     return X, y
 
-Xv, yv = extract_txt(train_path)
+Xv, yv = extract_txt(val_path)  # Change this to test different trajectories
+
+Xt, yt = extract_txt(train_path)
 
 scaler_val = MinMaxScaler((-1,1))
 yv = scaler_val.fit_transform(yv)
-
 scaler_Xval = MinMaxScaler((-1,1))
 Xv = scaler_Xval.fit_transform(Xv)
 
+scaler_val_train = MinMaxScaler((-1,1))
+yt = scaler_val_train.fit_transform(yt)
+
 yv = (np.asanyarray(yv)).tolist()
+yt = (np.asanyarray(yt)).tolist()
 
-validation_loader = IMUDataset(Xv, yv, seq_len=SEQ_LEN)
+validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHOR), batch_size=256, shuffle=False)
 
 
-model = GI_NN(input_size=INPUT_SIZE, output_channels=3, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20241104_145134/model_20241104_145134_53.pth"))
+model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
+model.load_state_dict(torch.load("chkpts/38SEQ_WeightedHuber_ANCHOR/model_20241108_063857_68.pth"))
+# model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
 model.eval()
 
-labels = []
-preds = []
 print("Epoch Done")
 running_vloss = 0.0
+labels, preds = list(), list()
+preds.append([0,0])
+labels.append([0,0])
 with torch.no_grad():
     for i, vdata in enumerate(validation_loader):
         try:
@@ -76,18 +85,19 @@ with torch.no_grad():
             if len(vy_.shape) < 2 or len(vy.shape) < 2:
                 vy_ = torch.unsqueeze(vy_, dim=0)
                 vy = torch.unsqueeze(vy, dim=0)
-            print(vy_.shape, vy.shape)
+            if ANCHOR is not None:
+                vy = vy[:,-1,:].squeeze(dim=1)
             vy_cpu, vycpu = vy_.cpu().tolist(), vy.cpu().tolist()
             for i in range(vy.shape[0]):
                 preds.append([
                     vy_cpu[i][0] + preds[-1][0],
-                    vy_cpu[i][1] + preds[-1][1],
-                    vy_cpu[i][2] + preds[-1][2],
+                    # preds[-1][0] - vy_cpu[i][0],
+                    vy_cpu[i][1] + preds[-1][1]
+                    # preds[-1][1] - vy_cpu[i][1]
                     ])
                 labels.append([
                     vycpu[i][0] + labels[-1][0],
                     vycpu[i][1] + labels[-1][1],
-                    vycpu[i][2] + labels[-1][2],
                     ])
         except:
             print("[INFO] Not enough data, proceeding...")
@@ -98,22 +108,18 @@ labels = scaler_val.inverse_transform(labels).tolist()
 
 px, py = [], []
 for idx, p in enumerate(preds):
-    px.append(p[0][0])
-    py.append(p[0][1])
+    px.append(p[0])
+    py.append(p[1])
 
 lx, ly = [], []
 for idx, l in enumerate(labels):
-    lx.append(l[0][0])
-    ly.append(l[0][1])
-
-xx = 0
-yy = 0
-for p in preds:
-    xx += p[0][0]
-    yy += p[0][1]
+    lx.append(l[0])
+    ly.append(l[1])
 
 plt.plot(px, py)
-plt.show()
-
 plt.plot(lx, ly)
+plt.title("Predicted vs Actual")
+plt.xlabel("Easting")
+plt.ylabel("Northing")
+plt.legend(["Predicted", "Actual"])
 plt.show()
