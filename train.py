@@ -13,17 +13,17 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 38
+SEQ_LEN = 30
 INPUT_SIZE = 14
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
 BATCH_SIZE_TRAIN = 512
 BATCH_SIZE_VAL = 512
-ANCHORS = 7
+ANCHORS = 14     # usually 10
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -99,7 +99,7 @@ loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 70
+    EPOCH = 400
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0

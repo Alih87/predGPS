@@ -1,9 +1,6 @@
 import torch, os
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.optim import SGD
 import matplotlib.pyplot as plt
-import wandb.plot
 from GI_NN_Mod import GI_NN
 from utils import IMUDataset
 from torch.utils.data import DataLoader
@@ -11,7 +8,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 train_path = "data/data.txt"
 val_path = "data/val.txt"
@@ -43,7 +40,7 @@ def extract_txt(file_path):
 
     return X, y
 
-Xv, yv = extract_txt(val_path)  # Change this to test different trajectories
+Xv, yv = extract_txt(train_path)  # Change this to test different trajectories
 
 Xt, yt = extract_txt(train_path)
 
@@ -62,7 +59,7 @@ validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHO
 
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/38SEQ_WeightedHuber_ANCHOR/model_20241108_063857_68.pth"))
+model.load_state_dict(torch.load("chkpts/20241110_032215/model_20241110_032215_190.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()

@@ -58,28 +58,52 @@ class GPSLoss(nn.Module):
         return x_loss*self.x_bias + y_loss*self.y_bias
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, recent_weight=0.5, final_weight=0.5):
+    def __init__(self, anchors, recent_weight=0.4, final_weight=0.4, dir_weight=0.2):
         super(RecentAndFinalLoss, self).__init__()
         self.recent_weight = recent_weight
         self.final_weight = final_weight
+        self.dir_weight = dir_weight
+        self.epsilon = 1e-8
         self.anchors = anchors
-        self.loss_fn = nn.HuberLoss()  # or nn.HuberLoss() or another suitable loss
+        self.loss_fn = nn.HuberLoss()  # or nn.MSELoss() or another suitable loss
+        self.cosine_loss = nn.CosineSimilarity(dim=-1, eps=self.epsilon)
 
     def forward(self, predictions, targets):
         if self.anchors is None or len(predictions.size()) < 3:
+            # Using arctan2
+            pred_angle = torch.atan2(predictions[..., 1], predictions[..., 0] + self.epsilon)
+            target_angle = torch.atan2(targets[..., 1], targets[..., 0] + self.epsilon)
+            directional_loss = torch.mean(torch.abs(pred_angle - target_angle))
+
+            # Using cosine similarity
+            directional_loss = 1 - self.cosine_loss(predictions, targets).mean()
+            
+            return self.loss_fn(predictions, targets) * (1-self.final_weight) + directional_loss * self.final_weight
             return self.loss_fn(predictions, targets)
+        
         recent_predictions = predictions[:, -1*self.anchors:-1, :]
         recent_targets = targets[:, -1*self.anchors:-1, :]
         recent_loss = self.loss_fn(recent_predictions, recent_targets)
-        
+
+        # Using arctan2
+        # pred_slope = torch.atan2(recent_predictions[..., 1], recent_predictions[..., 0] + self.epsilon)
+        # target_slope = torch.atan2(recent_targets[..., 1], recent_targets[..., 0] + self.epsilon)
+        # sin_loss = torch.sin(pred_slope) - torch.sin(target_slope)
+        # cos_loss = torch.cos(pred_slope) - torch.cos(target_slope)
+        # directional_loss = torch.mean((sin_loss)**2 + (cos_loss)**2)
+
+
+        # Using cosine similarity
+        directional_loss = 1 - self.cosine_loss(recent_predictions, recent_targets).mean()
+
         final_prediction = predictions[:, -1, :]
         final_target = targets[:, -1, :]
         final_loss = self.loss_fn(final_prediction, final_target)
         
-        combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss)
-        
+        combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss) + (directional_loss * self.dir_weight)
+        # combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss)
         return combined_loss
-
+    
 class DirectionalGPSLoss(nn.Module):
     def __init__(self, alpha = 0.5, beta = 0.5):
         super(DirectionalGPSLoss, self).__init__()
