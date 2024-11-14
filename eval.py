@@ -1,7 +1,7 @@
 import torch, os
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from GI_NN_Mod import GI_NN
+from GI_NN_Mod1 import GI_NN
 from utils import IMUDataset
 from torch.utils.data import DataLoader
 import numpy as np
@@ -10,12 +10,12 @@ from sklearn.preprocessing import MinMaxScaler
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-train_path = "data/data.txt"
-val_path = "data/val.txt"
+train_path = "data/data_fallback2.txt"
+val_path = "data/dataset_val_parallel.txt"
 
-SEQ_LEN = 38
-INPUT_SIZE = 14
-ANCHOR = 7
+SEQ_LEN = 48
+INPUT_SIZE = 12
+ANCHOR = 9
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -40,7 +40,7 @@ def extract_txt(file_path):
 
     return X, y
 
-Xv, yv = extract_txt(train_path)  # Change this to test different trajectories
+Xv, yv = extract_txt(val_path)  # Change this to test different trajectories
 
 Xt, yt = extract_txt(train_path)
 
@@ -59,7 +59,7 @@ validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHO
 
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20241110_032215/model_20241110_032215_190.pth"))
+model.load_state_dict(torch.load("chkpts/20241113_181343/model_20241113_181343_59.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -82,20 +82,41 @@ with torch.no_grad():
             if len(vy_.shape) < 2 or len(vy.shape) < 2:
                 vy_ = torch.unsqueeze(vy_, dim=0)
                 vy = torch.unsqueeze(vy, dim=0)
-            if ANCHOR is not None:
-                vy = vy[:,-1,:].squeeze(dim=1)
+
+            offset = 0
+            batch_idx = 1
             vy_cpu, vycpu = vy_.cpu().tolist(), vy.cpu().tolist()
             for i in range(vy.shape[0]):
-                preds.append([
-                    vy_cpu[i][0] + preds[-1][0],
-                    # preds[-1][0] - vy_cpu[i][0],
-                    vy_cpu[i][1] + preds[-1][1]
-                    # preds[-1][1] - vy_cpu[i][1]
-                    ])
-                labels.append([
-                    vycpu[i][0] + labels[-1][0],
-                    vycpu[i][1] + labels[-1][1],
-                    ])
+                if ANCHOR is None:
+                    preds.append([
+                        vy_cpu[i][0]*0.75 + preds[-batch_idx][0],
+                        # preds[-batch_idx-offset][0] - vy_cpu[i][0],
+                        vy_cpu[i][1]*0.75 + preds[-batch_idx][1]
+                        # preds[-batch_idx-offset][1] - vy_cpu[i][1]
+                                ])
+                    labels.append([
+                        vycpu[i][0] + labels[-1][0],
+                        vycpu[i][1] + labels[-1][1]
+                                ])
+                    batch_idx += 1
+                    if batch_idx > ANCHOR:
+                        batch_idx = 1
+                        offset += ANCHOR-1
+                else:
+                    preds.append([
+                        vy_cpu[i][-1][0]*0.75 + preds[-batch_idx][0],
+                        # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
+                        vy_cpu[i][-1][1]*0.75 + preds[-batch_idx][1]
+                        # preds[-batch_idx-offset][1] - vy_cpu[i][-1][1]
+                                ])
+                    labels.append([
+                        vycpu[i][-1][0] + labels[-1][0],
+                        vycpu[i][-1][1] + labels[-1][1]
+                                ])
+                    batch_idx += 1
+                    if batch_idx > ANCHOR:
+                        batch_idx = 1
+                        offset += ANCHOR-1
         except:
             print("[INFO] Not enough data, proceeding...")
             break

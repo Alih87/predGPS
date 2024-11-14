@@ -21,28 +21,35 @@ class IMUDataset(Dataset):
             self.scaler_x, self.scaler_y = scaler[0], scaler[1]
 
     def __len__(self):
-        return (len(self.X) - (self.seq_len + 1))
+        # Number of samples based on sequence length
+        return len(self.X) - self.seq_len
 
     def __getitem__(self, idx):
-        X = torch.tensor(self.X[idx:idx+self.seq_len], dtype=torch.float).T
-        Y = torch.tensor(self.y[idx:idx+self.seq_len], dtype=torch.float).T
+        # Extract input sequence (IMU data)
+        X = torch.tensor(self.X[idx:idx + self.seq_len], dtype=torch.float).T
+        Y = torch.tensor(self.y[idx:idx + self.seq_len], dtype=torch.float).T
+
+        # Single-step target: cumulative displacement over the entire sequence
         y = torch.tensor([
-            self.y[idx + self.seq_len + 1][0] - self.y[idx][0],
-            self.y[idx + self.seq_len + 1][1] - self.y[idx][1]
-                         ], dtype=torch.float)
-        X = torch.cat([X, Y], dim=0)
+            self.y[min(idx + self.seq_len, len(self.y) - 1)][0] - self.y[idx][0],
+            self.y[min(idx + self.seq_len, len(self.y) - 1)][1] - self.y[idx][1]
+        ], dtype=torch.float)
+
+        # Multi-step target: incremental displacements over the last `anchors` steps
         if self.anchors is not None:
             y_multi = torch.zeros((self.anchors, 2))
-            for i in reversed(range(self.anchors)):
-                y_multi[i,:] = torch.tensor([
-                            self.y[idx + self.seq_len - i][0] - self.y[idx][0],
-                            self.y[idx + self.seq_len - i][1] - self.y[idx][1]
-                            ], dtype=torch.float)
-            
-            return (X, y_multi)       # For ANCHORS number of time-step loss
-        
+            for i in range(self.anchors):
+                # Calculate displacement for each anchor point relative to the start of the sequence
+                anchor_idx = min(idx + i, len(self.y) - 1)
+                y_multi[i, :] = torch.tensor([
+                    self.y[anchor_idx][0] - self.y[idx][0],
+                    self.y[anchor_idx][1] - self.y[idx][1]
+                ], dtype=torch.float)
+
+            return (X, y_multi)  # Return the sequence and multi-step displacements
+
         else:
-            return (X, y)             # For single (last) time-step loss
+            return (X, y)  # Return the sequence and single final displacement
         
 class GPSLoss(nn.Module):
     def __init__(self, x_bias = 0.5, y_bias = 0.5):
@@ -58,11 +65,12 @@ class GPSLoss(nn.Module):
         return x_loss*self.x_bias + y_loss*self.y_bias
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, recent_weight=0.4, final_weight=0.4, dir_weight=0.2):
+    def __init__(self, anchors, inc_weights=0.4, recent_weight=0.25, final_weight=0.15, dir_weight=0.2):
         super(RecentAndFinalLoss, self).__init__()
         self.recent_weight = recent_weight
         self.final_weight = final_weight
         self.dir_weight = dir_weight
+        self.inc_weights = inc_weights
         self.epsilon = 1e-8
         self.anchors = anchors
         self.loss_fn = nn.HuberLoss()  # or nn.MSELoss() or another suitable loss
@@ -71,19 +79,23 @@ class RecentAndFinalLoss(nn.Module):
     def forward(self, predictions, targets):
         if self.anchors is None or len(predictions.size()) < 3:
             # Using arctan2
-            pred_angle = torch.atan2(predictions[..., 1], predictions[..., 0] + self.epsilon)
-            target_angle = torch.atan2(targets[..., 1], targets[..., 0] + self.epsilon)
-            directional_loss = torch.mean(torch.abs(pred_angle - target_angle))
+            # pred_angle = torch.atan2(predictions[..., 1], predictions[..., 0] + self.epsilon)
+            # target_angle = torch.atan2(targets[..., 1], targets[..., 0] + self.epsilon)
+            # directional_loss = torch.mean(torch.abs(pred_angle - target_angle))
 
             # Using cosine similarity
             directional_loss = 1 - self.cosine_loss(predictions, targets).mean()
-            
+
             return self.loss_fn(predictions, targets) * (1-self.final_weight) + directional_loss * self.final_weight
             return self.loss_fn(predictions, targets)
         
         recent_predictions = predictions[:, -1*self.anchors:-1, :]
         recent_targets = targets[:, -1*self.anchors:-1, :]
         recent_loss = self.loss_fn(recent_predictions, recent_targets)
+        
+        target_increments = targets[:, 1:] - targets[:, :-1]
+        pred_increments = predictions[:, 1:] - predictions[:, :-1]
+        inc_loss = self.loss_fn(pred_increments, target_increments)
 
         # Using arctan2
         # pred_slope = torch.atan2(recent_predictions[..., 1], recent_predictions[..., 0] + self.epsilon)
@@ -100,7 +112,7 @@ class RecentAndFinalLoss(nn.Module):
         final_target = targets[:, -1, :]
         final_loss = self.loss_fn(final_prediction, final_target)
         
-        combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss) + (directional_loss * self.dir_weight)
+        combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss) + (directional_loss * self.dir_weight) + (inc_loss * self.inc_weights)
         # combined_loss = (self.recent_weight * recent_loss) + (self.final_weight * final_loss)
         return combined_loss
     

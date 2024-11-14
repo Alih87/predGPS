@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import SGD, Adam
 import matplotlib.pyplot as plt
-from GI_NN_Mod import GI_NN
+from GI_NN_Mod1 import GI_NN
 from torch.utils.data import DataLoader
 from utils import IMUDataset, DirectionalGPSLoss, GPSLoss, RecentAndFinalLoss
 
@@ -13,17 +13,17 @@ from sklearn.preprocessing import MinMaxScaler
 from collections import deque
 
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-train_path = "data/data.txt"
+train_path = "data/dataset_train_pruned.txt"
 val_path = "data/val.txt"
 
-SEQ_LEN = 30
-INPUT_SIZE = 14
+SEQ_LEN = 48
+INPUT_SIZE = 12
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
-BATCH_SIZE_TRAIN = 512
-BATCH_SIZE_VAL = 512
-ANCHORS = 14     # usually 10
+BATCH_SIZE_TRAIN = 256
+BATCH_SIZE_VAL = 256
+ANCHORS = 9    # usually 10
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -52,7 +52,7 @@ def train_one_epoch(anchors):
     running_loss = 0.0
     last_loss = 0.0
     for i, data in enumerate(training_loader):
-        try:
+    # try:
             X, y = data
             X = X.cuda().float()
             y = y.cuda().float()
@@ -65,9 +65,9 @@ def train_one_epoch(anchors):
             optimizer.step()
             print(f"Batch number {i+1} loss: {loss}")
             running_loss += loss.item()
-        except:
-            print("[INFO] Not enough data, proceeding...")
-            break
+        # except:
+        #     print("[INFO] Not enough data, proceeding...")
+        #     break
     last_loss = running_loss / (i+1)
     return last_loss
 
@@ -87,19 +87,19 @@ yt = (np.asanyarray(yt)).tolist()
 yv = (np.asanyarray(yv)).tolist()
 
 training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
-validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=None, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
+validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
 model = model.cuda().float()
 model.train()
-optimizer = Adam(model.parameters(), lr = 1e-3)
+optimizer = Adam(model.parameters(), lr = 1e-4, weight_decay=3e-3)
 loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 400
+    EPOCH = 60
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
@@ -117,6 +117,8 @@ if __name__ == '__main__':
         running_vloss = 0.0
         model.eval()
         with torch.no_grad():
+            offset = 0
+            batch_idx = 1
             for ii, vdata in enumerate(validation_loader):
                 try:
                     vX, vy = vdata
@@ -130,14 +132,36 @@ if __name__ == '__main__':
                         vy = torch.unsqueeze(vy, dim=0)
                     vy_cpu, vycpu = vy_.cpu().tolist(), vy.cpu().tolist()
                     for i in range(vy.shape[0]):
-                        preds.append([
-                            vy_cpu[i][0] + preds[-1][0],
-                            vy_cpu[i][1] + preds[-1][1]
-                                     ])
-                        labels.append([
-                            vycpu[i][0] + labels[-1][0],
-                            vycpu[i][1] + labels[-1][1]
-                                      ])
+                        if ANCHORS is None:
+                            preds.append([
+                                vy_cpu[i][0] + preds[-batch_idx-offset][0],
+                                # preds[-batch_idx-offset][0] - vy_cpu[i][0],
+                                vy_cpu[i][1] + preds[-batch_idx-offset][1]
+                                # preds[-batch_idx-offset][1] - vy_cpu[i][1]
+                                        ])
+                            labels.append([
+                                vycpu[i][0] + labels[-1][0],
+                                vycpu[i][1] + labels[-1][1]
+                                        ])
+                            batch_idx += 1
+                            if batch_idx > ANCHORS:
+                                batch_idx = 1
+                                offset += ANCHORS-1
+                        else:
+                            preds.append([
+                                vy_cpu[i][-1][0] + preds[-batch_idx-offset][0],
+                                # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
+                                vy_cpu[i][-1][1] + preds[-batch_idx-offset][1]
+                                # preds[-batch_idx-offset][1] - vy_cpu[i][-1][1]
+                                        ])
+                            labels.append([
+                                vycpu[i][-1][0] + labels[-1][0],
+                                vycpu[i][-1][1] + labels[-1][1]
+                                        ])
+                            batch_idx += 1
+                            if batch_idx > ANCHORS:
+                                batch_idx = 1
+                                offset += ANCHORS-1
                     vloss = loss_fn(vy_, vy)
                     print(f"Batch number {ii+1} loss: {vloss}")
                     running_vloss += vloss.item()
@@ -156,7 +180,7 @@ if __name__ == '__main__':
             "Validation": avg_vloss
         })
     
-        if avg_vloss < best_vloss:
+        if avg_vloss < best_vloss or epoch == EPOCH-1:
             best_vloss = avg_vloss
             os.makedirs(f"chkpts/{time_stamp}", exist_ok=True)
             model_path = f"chkpts/{time_stamp}/model_{time_stamp}_{epoch_number}.pth"

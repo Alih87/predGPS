@@ -13,20 +13,21 @@ class GI_NN(nn.Module):
         self.anchors = anchors
         self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
         
-        self.first_layer = nn.Conv1d(self.input_size, 256, 1)
+        self.first_layer = nn.Conv1d(self.input_size, 256, 5, padding=0)
         self.pool1 = nn.AdaptiveAvgPool1d(SEQ_LEN // 2)
 
-        self.second_layer = nn.Conv1d(256, 512, 1)
+        self.second_layer = nn.Conv1d(256, 512, 15, padding=1)
         self.pool2 = nn.AdaptiveAvgPool1d(SEQ_LEN // 4)
 
-        self.third_layer = nn.Conv1d(512, 512, 1)
+        self.third_layer = nn.Conv1d(512, 512, 15, padding=1)
+        # self.third_layer = nn.Conv1d(512, 256, 1)
         self.pool3 = nn.AdaptiveAvgPool1d(SEQ_LEN // 8)
 
-        self.fourth_layer = nn.Conv1d(512, 256, 1)
+        self.fourth_layer = nn.Conv1d(512, 256, 12, padding=1)
         self.pool4 = nn.AdaptiveAvgPool1d(SEQ_LEN // 16)
 
         self.fc = nn.Linear(256, 64)
-        self.drop_out = nn.Dropout(0.15)
+        self.drop_out = nn.Dropout(0.35)
         self.last_layer = nn.Linear(64, output_channels)
         
         self.relu = nn.ReLU()
@@ -81,7 +82,7 @@ class GI_NN(nn.Module):
             if self.anchors is None:
                 z = torch.squeeze(z, dim=0)
             else:
-                z = torch.squeeze(z[:,-1,:], dim=0)        
+                z = z[:,-1*self.anchors:,:]  # change this to remove the errors
             return z.cuda().float()
 
 if __name__ == '__main__':
@@ -97,8 +98,8 @@ if __name__ == '__main__':
     model.eval()
     x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)
     targets = torch.randn(4, ANCHORS, 2).to(DEVICE)
-    out = model(x, targets)
-    print(out)
+    out = model(x, targets).cpu().tolist()
+    print(out[0][-1])
     if model.training:
         print("loss:", out[0])
         print("pred:", out[1])
