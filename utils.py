@@ -40,7 +40,7 @@ class IMUDataset(Dataset):
             y_multi = torch.zeros((self.anchors, 2))
             for i in range(self.anchors):
                 # Calculate displacement for each anchor point relative to the start of the sequence
-                anchor_idx = min(idx + i, len(self.y) - 1)
+                anchor_idx = min(idx + self.seq_len - self.anchors + i, len(self.y) - 1)
                 y_multi[i, :] = torch.tensor([
                     self.y[anchor_idx][0] - self.y[idx][0],
                     self.y[anchor_idx][1] - self.y[idx][1]
@@ -65,7 +65,7 @@ class GPSLoss(nn.Module):
         return x_loss*self.x_bias + y_loss*self.y_bias
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, inc_weights=0.4, recent_weight=0.25, final_weight=0.15, dir_weight=0.2):
+    def __init__(self, anchors, inc_weights=0.0, recent_weight=0.55, final_weight=0.45, dir_weight=0.0):
         super(RecentAndFinalLoss, self).__init__()
         self.recent_weight = recent_weight
         self.final_weight = final_weight
@@ -84,9 +84,9 @@ class RecentAndFinalLoss(nn.Module):
             # directional_loss = torch.mean(torch.abs(pred_angle - target_angle))
 
             # Using cosine similarity
-            directional_loss = 1 - self.cosine_loss(predictions, targets).mean()
+            directional_loss = (1-self.cosine_loss(predictions, targets)).mean()
 
-            return self.loss_fn(predictions, targets) * (1-self.final_weight) + directional_loss * self.final_weight
+            return self.loss_fn(predictions, targets) * (self.final_weight+self.recent_weight) + directional_loss * self.dir_weight
             return self.loss_fn(predictions, targets)
         
         recent_predictions = predictions[:, -1*self.anchors:-1, :]
@@ -106,7 +106,7 @@ class RecentAndFinalLoss(nn.Module):
 
 
         # Using cosine similarity
-        directional_loss = 1 - self.cosine_loss(recent_predictions, recent_targets).mean()
+        directional_loss = (1-self.cosine_loss(recent_predictions, recent_targets)).mean()
 
         final_prediction = predictions[:, -1, :]
         final_target = targets[:, -1, :]

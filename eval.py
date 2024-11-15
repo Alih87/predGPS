@@ -1,7 +1,7 @@
 import torch, os
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from GI_NN_Mod1 import GI_NN
+from GI_NN_Mod import GI_NN
 from utils import IMUDataset
 from torch.utils.data import DataLoader
 import numpy as np
@@ -11,7 +11,7 @@ os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 train_path = "data/data_fallback2.txt"
-val_path = "data/dataset_val_parallel.txt"
+val_path = "data/dataset_val_crank.txt"
 
 SEQ_LEN = 48
 INPUT_SIZE = 12
@@ -59,7 +59,7 @@ validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHO
 
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20241113_181343/model_20241113_181343_59.pth"))
+model.load_state_dict(torch.load("chkpts/20241115_132231/model_20241115_132231_59.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -89,9 +89,9 @@ with torch.no_grad():
             for i in range(vy.shape[0]):
                 if ANCHOR is None:
                     preds.append([
-                        vy_cpu[i][0]*0.75 + preds[-batch_idx][0],
+                        vy_cpu[i][0] + preds[-1][0],
                         # preds[-batch_idx-offset][0] - vy_cpu[i][0],
-                        vy_cpu[i][1]*0.75 + preds[-batch_idx][1]
+                        vy_cpu[i][1] + preds[-1][1]
                         # preds[-batch_idx-offset][1] - vy_cpu[i][1]
                                 ])
                     labels.append([
@@ -104,9 +104,9 @@ with torch.no_grad():
                         offset += ANCHOR-1
                 else:
                     preds.append([
-                        vy_cpu[i][-1][0]*0.75 + preds[-batch_idx][0],
+                        vy_cpu[i][-1][0] + preds[-1][0],
                         # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                        vy_cpu[i][-1][1]*0.75 + preds[-batch_idx][1]
+                        vy_cpu[i][-1][1] + preds[-1][1]
                         # preds[-batch_idx-offset][1] - vy_cpu[i][-1][1]
                                 ])
                     labels.append([

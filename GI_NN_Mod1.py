@@ -42,7 +42,7 @@ class GI_NN(nn.Module):
         # GRU and fully connected layers
         self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
         self.fc = nn.Linear(256, 64)
-        self.drop_out = nn.Dropout(0.35)
+        self.drop_out = nn.Dropout(0.2)
         self.last_layer = nn.Linear(64, output_channels)
 
         self.relu = nn.ReLU()
@@ -106,7 +106,7 @@ class GI_NN(nn.Module):
             loss = self.loss_fn(z, y)
             return loss, z.cuda().float()
         else:
-            return z[:, -1*self.anchors:, :] if self.anchors is not None else torch.squeeze(z, dim=0).cuda().float()
+            return z[:, -1*self.anchors:, :].cuda().float() if self.anchors is not None else torch.squeeze(z, dim=0).cuda().float()
 
 if __name__ == '__main__':
     os.chdir("/data_hdd1/hassan/projects/GPS")
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)
-    model.train()
+    model.eval()
     x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)
     targets = torch.randn(4, ANCHORS, 2).to(DEVICE)
     out = model(x, targets)

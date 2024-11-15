@@ -16,14 +16,14 @@ os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 train_path = "data/dataset_train_pruned.txt"
-val_path = "data/val.txt"
+val_path = "data/dataset_val_crank.txt"
 
 SEQ_LEN = 48
 INPUT_SIZE = 12
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
-BATCH_SIZE_TRAIN = 256
-BATCH_SIZE_VAL = 256
-ANCHORS = 9    # usually 10
+BATCH_SIZE_TRAIN = 512
+BATCH_SIZE_VAL = 512
+ANCHORS = None    # usually 10
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -134,9 +134,9 @@ if __name__ == '__main__':
                     for i in range(vy.shape[0]):
                         if ANCHORS is None:
                             preds.append([
-                                vy_cpu[i][0] + preds[-batch_idx-offset][0],
+                                vy_cpu[i][0] + preds[-batch_idx][0],
                                 # preds[-batch_idx-offset][0] - vy_cpu[i][0],
-                                vy_cpu[i][1] + preds[-batch_idx-offset][1]
+                                vy_cpu[i][1] + preds[-batch_idx][1]
                                 # preds[-batch_idx-offset][1] - vy_cpu[i][1]
                                         ])
                             labels.append([
@@ -144,21 +144,17 @@ if __name__ == '__main__':
                                 vycpu[i][1] + labels[-1][1]
                                         ])
                             batch_idx += 1
-                            if batch_idx > ANCHORS:
-                                batch_idx = 1
-                                offset += ANCHORS-1
                         else:
                             preds.append([
-                                vy_cpu[i][-1][0] + preds[-batch_idx-offset][0],
+                                vy_cpu[i][-1][0] + preds[-batch_idx][0],
                                 # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                                vy_cpu[i][-1][1] + preds[-batch_idx-offset][1]
+                                vy_cpu[i][-1][1] + preds[-batch_idx][1]
                                 # preds[-batch_idx-offset][1] - vy_cpu[i][-1][1]
                                         ])
                             labels.append([
                                 vycpu[i][-1][0] + labels[-1][0],
                                 vycpu[i][-1][1] + labels[-1][1]
                                         ])
-                            batch_idx += 1
                             if batch_idx > ANCHORS:
                                 batch_idx = 1
                                 offset += ANCHORS-1
