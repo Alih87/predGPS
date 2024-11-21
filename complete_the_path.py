@@ -10,15 +10,15 @@ from sklearn.preprocessing import MinMaxScaler
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-train_path = "data/data.txt"
-val_path = "data/dataset_val_crank.txt"
+train_path = "data/dataset_train_t.txt"
+val_path = "data/dataset_val_crank_t.txt"
 
 SEQ_LEN = 48
-INPUT_SIZE = 12
-ANCHOR = 9
+INPUT_SIZE = 13
+ANCHOR = 6
 
-START_POINT = 0.56
-END_POINT = 0.79
+START_POINT = 0.25      #0.6
+END_POINT = 0.6      #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -61,7 +61,7 @@ validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHO
 
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20241115_155309/model_20241115_155309_59.pth"))
+model.load_state_dict(torch.load("chkpts/20241120_173732/model_20241120_173732_999.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -76,7 +76,7 @@ labels.append([0,0])
 print(validation_loader.__len__())
 with torch.no_grad():
     for ii, vdata in enumerate(validation_loader):
-        try:
+        # try:
             vX, vy = vdata
             vX = vX.cuda().float()
             vy = vy.cuda().float()
@@ -120,7 +120,6 @@ with torch.no_grad():
                         vycpu[i][-1][1] + labels[-1][1]
                                 ])
                     else:
-                        print("here")
                         vy_ = model(vX)
                         if len(vy_.shape) < 2 or len(vy.shape) < 2:
                             vy_ = torch.unsqueeze(vy_, dim=0)
@@ -145,12 +144,12 @@ with torch.no_grad():
                             batch_idx = 1
                             offset += ANCHOR-1
 
-        except:
-            print("[INFO] Not enough data, proceeding...")
-            break
+        # except:
+            # print("[INFO] Not enough data, proceeding...")
+            # break
 
-preds = scaler_val.inverse_transform(preds).tolist()
-labels = scaler_val.inverse_transform(labels).tolist()
+preds = scaler_val_train.inverse_transform(preds).tolist()
+labels = scaler_val_train.inverse_transform(labels).tolist()
 
 lx, ly = [], []
 for idx, l in enumerate(labels):
@@ -164,7 +163,7 @@ for idx, p in enumerate(preds):
 
 plt.scatter(lx, ly)
 plt.scatter(px[1:], py[1:])
-plt.title("Predicted vs Actual")
+plt.title("Trajectory Comparison")
 plt.xlabel("Easting")
 plt.ylabel("Northing")
 plt.legend(["Actual", "Predicted"])

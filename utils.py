@@ -31,9 +31,11 @@ class IMUDataset(Dataset):
 
         # Single-step target: cumulative displacement over the entire sequence
         y = torch.tensor([
-            self.y[min(idx + self.seq_len, len(self.y) - 1)][0] - self.y[idx][0],
-            self.y[min(idx + self.seq_len, len(self.y) - 1)][1] - self.y[idx][1]
+            self.y[min(idx + self.seq_len + 1, len(self.y) - 1)][0] - self.y[idx][0],
+            self.y[min(idx + self.seq_len + 1, len(self.y) - 1)][1] - self.y[idx][1]
         ], dtype=torch.float)
+
+        # X = torch.concat([X, Y], dim=0)
 
         # Multi-step target: incremental displacements over the last `anchors` steps
         if self.anchors is not None:
@@ -65,7 +67,7 @@ class GPSLoss(nn.Module):
         return x_loss*self.x_bias + y_loss*self.y_bias
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, inc_weights=0.0, recent_weight=0.55, final_weight=0.45, dir_weight=0.0):
+    def __init__(self, anchors, inc_weights=0.0, recent_weight=0.65, final_weight=0.35, dir_weight=0.0):
         super(RecentAndFinalLoss, self).__init__()
         self.recent_weight = recent_weight
         self.final_weight = final_weight
@@ -91,6 +93,10 @@ class RecentAndFinalLoss(nn.Module):
         
         recent_predictions = predictions[:, -1*self.anchors:-1, :]
         recent_targets = targets[:, -1*self.anchors:-1, :]
+
+        pred_vectors = recent_predictions[:, 1:, :] - recent_predictions[:, :-1, :]
+        target_vectors = recent_targets[:, 1:, :] - recent_targets[:, :-1, :]
+
         recent_loss = self.loss_fn(recent_predictions, recent_targets)
         
         target_increments = targets[:, 1:] - targets[:, :-1]
@@ -106,7 +112,7 @@ class RecentAndFinalLoss(nn.Module):
 
 
         # Using cosine similarity
-        directional_loss = (1-self.cosine_loss(recent_predictions, recent_targets)).mean()
+        directional_loss = (1-self.cosine_loss(pred_vectors, target_vectors)).mean()
 
         final_prediction = predictions[:, -1, :]
         final_target = targets[:, -1, :]
@@ -147,7 +153,7 @@ if __name__ == '__main__':
     points = []
     X, y = [], []
     
-    file_path = "data/data.txt"
+    file_path = "data/dataset_train_t.txt"
     with open(file_path, 'r') as f:
         line = f.readlines()
         f.close()
