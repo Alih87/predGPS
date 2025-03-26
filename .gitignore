@@ -1,0 +1,8 @@
+*.h5
+*.pth
+*.onnx
+*.pkl
+chkpts/
+wandb/
+results/
+data/

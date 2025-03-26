@@ -4,7 +4,6 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from utils import RecentAndFinalLoss
 
-
 class GI_NN(nn.Module):
     def __init__(self, input_size, output_channels, anchors, SEQ_LEN):
         super(GI_NN, self).__init__()
@@ -61,7 +60,6 @@ class GI_NN(nn.Module):
         a3 = self.relu(a3)
 
         a3 = a3.permute(0, 2, 1)
-        
         b, _ = self.gnn(a3)
         if self.anchors is not None:
             c = self.fc(b[:, -1*self.anchors:, :])      # Use all of 'b' for many-to-many
@@ -74,6 +72,7 @@ class GI_NN(nn.Module):
         if self.training:
             if y is None:
                 raise ValueError("Targets cannot be None in training mode")
+            print(z.shape, y.shape)
             loss = self.loss_fn(z, y)
             z = torch.squeeze(z, dim=0)
             return loss, z.cuda().float()

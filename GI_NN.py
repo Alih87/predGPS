@@ -75,7 +75,7 @@ if __name__ == '__main__':
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     SEQ_LEN = 14
-    INPUT_SIZE = 12
+    INPUT_SIZE = 7
 
     model = GI_NN(input_size=INPUT_SIZE, output_channels=2, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)

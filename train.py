@@ -15,15 +15,15 @@ from collections import deque
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-train_path = "data/dataset_train_t.txt"
-val_path = "data/dataset_val_crank_t.txt"
+train_path = "data/dataset_train.txt"
+val_path = "data/dataset_test_spiral.txt"
 
-SEQ_LEN = 48
-INPUT_SIZE = 13
+SEQ_LEN = 64
+INPUT_SIZE = 7
 LAT_CENTER, LON_CENTER = 388731.70, 3974424.49
 BATCH_SIZE_TRAIN = 512
 BATCH_SIZE_VAL = 512
-ANCHORS = 6    # usually 10
+ANCHORS = 32    # usually 10
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -35,7 +35,7 @@ def normalize_data(X):
 def extract_txt(file_path):
     points = []
     X, y = [], []
- 
+
     with open(file_path, 'r') as f:
         line = f.readlines()
         f.close()
@@ -52,7 +52,7 @@ def train_one_epoch(anchors):
     running_loss = 0.0
     last_loss = 0.0
     for i, data in enumerate(training_loader):
-    # try:
+        # try:
             X, y = data
             X = X.cuda().float()
             y = y.cuda().float()
@@ -83,6 +83,10 @@ scaler_ytrain = MinMaxScaler((-1,1))
 scaler_yval = MinMaxScaler((-1,1))
 yt = scaler_ytrain.fit_transform(yt)
 yv = scaler_yval.fit_transform(yv)
+
+# Xt = np.concatenate((yt, Xt), axis=1)
+# Xv = np.concatenate((yv, Xv), axis=1)
+
 yt = (np.asanyarray(yt)).tolist()
 yv = (np.asanyarray(yv)).tolist()
 
@@ -94,12 +98,13 @@ model.to(DEVICE)
 model = model.cuda().float()
 model.train()
 optimizer = Adam(model.parameters(), lr = 1e-4, weight_decay=3e-3)
+# loss_fn = DirectionalGPSLoss(alpha=0.6, beta=0.4)
 loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 1000
+    EPOCH = 600
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0

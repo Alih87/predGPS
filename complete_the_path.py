@@ -10,15 +10,15 @@ from sklearn.preprocessing import MinMaxScaler
 os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-train_path = "data/dataset_train_t.txt"
-val_path = "data/dataset_val_crank_t.txt"
+train_path = "data/dataset_train.txt"
+val_path = "data/dataset_test_spiral.txt"
 
-SEQ_LEN = 48
-INPUT_SIZE = 13
-ANCHOR = 6
+SEQ_LEN = 64
+INPUT_SIZE = 7
+ANCHOR = 32
 
-START_POINT = 0.25      #0.6
-END_POINT = 0.6      #0.75
+START_POINT = 0.75     #0.6
+END_POINT = 0.98    #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -54,14 +54,15 @@ Xv = scaler_Xval.fit_transform(Xv)
 scaler_val_train = MinMaxScaler((-1,1))
 yt = scaler_val_train.fit_transform(yt)
 
+# Xv = np.concatenate((Xv, yv), axis=1)
+
 yv = (np.asanyarray(yv)).tolist()
 yt = (np.asanyarray(yt)).tolist()
 
 validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHOR), batch_size=1, shuffle=False)
 
-
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20241120_173732/model_20241120_173732_999.pth"))
+model.load_state_dict(torch.load("chkpts/20250326_120550/model_20250326_120550_225.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -73,10 +74,9 @@ labels, preds = list(), list()
 preds.append([0,0])
 labels.append([0,0])
 
-print(validation_loader.__len__())
 with torch.no_grad():
     for ii, vdata in enumerate(validation_loader):
-        # try:
+        # try:-
             vX, vy = vdata
             vX = vX.cuda().float()
             vy = vy.cuda().float()
@@ -87,7 +87,7 @@ with torch.no_grad():
             vycpu = vy.cpu().tolist()
             for i in range(vy.shape[0]):
                 if ANCHOR is None:
-                    if ii < int(START_POINT*validation_loader.__len__()) or ii > int(END_POINT*validation_loader.__len__()):
+                    if ii < int(START_POINT * validation_loader.__len__()) or ii > int(END_POINT * validation_loader.__len__()):
                         labels.append([
                         vycpu[i][0] + labels[-1][0],
                         vycpu[i][1] + labels[-1][1]
@@ -107,9 +107,9 @@ with torch.no_grad():
                             # preds[-1][1] - vy_cpu[i][1]
                                     ])
                         labels.append([
-                            vy_cpu[i][0] + labels[-1][0],
+                            labels[-1][0] + vy_cpu[i][0],
                             # preds[-1][0] - vy_cpu[i][0],
-                            vy_cpu[i][1] + labels[-1][1]
+                            labels[-1][1] + vy_cpu[i][1]
                             # preds[-1][1] - vy_cpu[i][1]
                                     ])
                         batch_idx += 1
@@ -128,15 +128,15 @@ with torch.no_grad():
                             vy = vy[:,-1,:].squeeze(dim=1)
                         vy_cpu = vy_.cpu().tolist()
                         preds.append([
-                            vy_cpu[i][-1][0] + labels[-1][0],
+                            labels[-1][0] + vy_cpu[i][-1][0],
                             # preds[-1][0] - vy_cpu[i][-1][0],
-                            vy_cpu[i][-1][1] + labels[-1][1]
+                            labels[-1][1] + vy_cpu[i][-1][1]
                             # preds[-1][1] - vy_cpu[i][-1][1]
                                     ])
                         labels.append([
-                            vy_cpu[i][-1][0] + labels[-1][0],
+                            labels[-1][0] + vy_cpu[i][-1][0],
                             # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                            vy_cpu[i][-1][1] + labels[-1][1]
+                            labels[-1][1] + vy_cpu[i][-1][1]
                             # preds[-1][1] - vy_cpu[i][-1][1]
                                     ])
                         batch_idx += 1
@@ -148,8 +148,8 @@ with torch.no_grad():
             # print("[INFO] Not enough data, proceeding...")
             # break
 
-preds = scaler_val_train.inverse_transform(preds).tolist()
-labels = scaler_val_train.inverse_transform(labels).tolist()
+preds = scaler_val.inverse_transform(preds).tolist()
+labels = scaler_val.inverse_transform(labels).tolist()
 
 lx, ly = [], []
 for idx, l in enumerate(labels):

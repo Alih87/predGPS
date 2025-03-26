@@ -2,7 +2,7 @@ import torch, os
 import torch.nn as nn
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-from utils import RecentAndFinalLoss
+from utils import RecentAndFinalLoss, DirectionalGPSLoss, GPSLoss
 
 class GI_NN(nn.Module):
     def __init__(self, input_size, output_channels, anchors, SEQ_LEN):
@@ -42,12 +42,13 @@ class GI_NN(nn.Module):
         # GRU and fully connected layers
         self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
         self.fc = nn.Linear(256, 64)
-        self.drop_out = nn.Dropout(0.2)
+        self.drop_out = nn.Dropout(0.1)
         self.last_layer = nn.Linear(64, output_channels)
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
-        self.loss_fn = RecentAndFinalLoss(self.anchors)
+        # self.loss_fn = DirectionalGPSLoss(alpha=0.6, beta=0.4)
+        self.loss_fn = RecentAndFinalLoss(anchors=self.anchors)
 
     def forward(self, x, y=None):
         # Global path (captures broad trends)
@@ -103,7 +104,8 @@ class GI_NN(nn.Module):
         if self.training:
             if y is None:
                 raise ValueError("Targets cannot be None in training mode")
-            loss = self.loss_fn(z, y)
+            z_flipped = torch.flip(z, [1])  # Reverse the sequence
+            loss = self.loss_fn(z_flipped, y)
             return loss, z.cuda().float()
         else:
             return z[:, -1*self.anchors:, :].cuda().float() if self.anchors is not None else torch.squeeze(z, dim=0).cuda().float()
