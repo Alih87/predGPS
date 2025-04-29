@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import SGD, Adam
 import matplotlib.pyplot as plt
-from GI_NN_Mod1 import GI_NN
+from GI_NN_Mod2 import GI_NN
 from torch.utils.data import DataLoader
-from utils import IMUDataset, DirectionalGPSLoss, GPSLoss, RecentAndFinalLoss
+from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, DirectionalGPSLoss, GPSLoss, RecentAndFinalLoss
 
 import wandb, datetime
 import numpy as np
@@ -60,7 +60,7 @@ def train_one_epoch(anchors):
             y.to(DEVICE)
             optimizer.zero_grad()
             loss, y_ = model(X, y)
-            loss.backward()
+            loss.mean().backward()
 
             optimizer.step()
             print(f"Batch number {i+1} loss: {loss}")
@@ -90,8 +90,8 @@ yv = scaler_yval.fit_transform(yv)
 yt = (np.asanyarray(yt)).tolist()
 yv = (np.asanyarray(yv)).tolist()
 
-training_loader = DataLoader(IMUDataset(Xt, yt, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
-validation_loader = DataLoader(IMUDataset(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
+training_loader = DataLoader(IMUDataset_M2M(Xt, yt, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yt[0]), batch_size=BATCH_SIZE_TRAIN, shuffle=True)
+validation_loader = DataLoader(IMUDataset_M2M(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHORS, scaler=yv[0]), batch_size=BATCH_SIZE_VAL, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
 model.to(DEVICE)
@@ -104,7 +104,7 @@ loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 600
+    EPOCH = 470
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
@@ -153,12 +153,12 @@ if __name__ == '__main__':
                             preds.append([
                                 vy_cpu[i][-1][0] + preds[-batch_idx][0],
                                 # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                                vy_cpu[i][-1][1] + preds[-batch_idx][1]
+                                vy_cpu[i][-1][1] - preds[-batch_idx][1]
                                 # preds[-batch_idx-offset][1] - vy_cpu[i][-1][1]
                                         ])
                             labels.append([
                                 vycpu[i][-1][0] + labels[-1][0],
-                                vycpu[i][-1][1] + labels[-1][1]
+                                vycpu[i][-1][1] - labels[-1][1]
                                         ])
                             if batch_idx > ANCHORS:
                                 batch_idx = 1
@@ -200,12 +200,12 @@ if __name__ == '__main__':
         ly.append(l[1])
 
     data1 = [[x,y] for (x,y) in zip(px, py)]
-    table1 = wandb.Table(data=data1, columns=["Easting", "Northing"])
-    wandb.log({"Predicted": wandb.plot.scatter(table1, "Easting", "Northing")})
+    table1 = wandb.Table(data=data1, columns=["Easting_P", "Northing_P"])
+    wandb.log({"Predicted": wandb.plot.scatter(table1, "Easting_P", "Northing_P")})
 
     data2 = [[x,y] for (x,y) in zip(lx, ly)]
-    table2 = wandb.Table(data=data2, columns=["Easting", "Northing"])
-    wandb.log({"Labels": wandb.plot.scatter(table2, "Easting", "Northing")})
+    table2 = wandb.Table(data=data2, columns=["Easting_L", "Northing_L"])
+    wandb.log({"Labels": wandb.plot.scatter(table2, "Easting_L", "Northing_L")})
 
     os.mkdir(f"results/{time_stamp}")
 
@@ -219,3 +219,4 @@ if __name__ == '__main__':
     plt.plot(lx, ly)
     plt.legend(["Predicted", "Labels"])
     plt.savefig(f"results/{time_stamp}/trajectories.png")
+    

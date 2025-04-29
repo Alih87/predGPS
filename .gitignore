@@ -2,7 +2,9 @@
 *.pth
 *.onnx
 *.pkl
+*.pyc
 chkpts/
 wandb/
 results/
 data/
+vectors/
