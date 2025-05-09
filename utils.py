@@ -49,6 +49,28 @@ def make_vectors(distances, routine=False):
     
     else:
         return torch.tensor(vectors)
+    
+def trajectory_construct_M2M(pred, label_list, ANCHOR_SIZE):
+    idx = 0
+    label_list_copy = copy(label_list)
+    label_list.append([0, 0])
+    # print(label_list)
+    for prx, pry in pred:
+        lbl_idx = int(-ANCHOR_SIZE + idx - 1)
+        # print(prx, pry)
+        try:
+            # print(label_list[lbl_idx][0], label_list[lbl_idx][1])
+            label_list[lbl_idx] = [label_list[lbl_idx-idx][0] + prx,
+                                   label_list[lbl_idx-idx][1] + pry]
+            label_list[lbl_idx] = [(label_list[lbl_idx-idx][0] + label_list_copy[lbl_idx-idx-1][0]) / 2,
+                                   (label_list[lbl_idx-idx][1] + label_list_copy[lbl_idx-idx-1][1]) / 2]
+        except IndexError:
+            label_list.extend(pred)
+            break
+        # label_list.append([prx, pry])
+        idx += 1
+    
+    return label_list
 
 class IMUDataset(Dataset):
     def __init__(self, X, y, seq_len, anchors=None, scaler=None):
@@ -184,8 +206,9 @@ class StepDistanceLoss(nn.Module):
         return loss
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, vec_weights=0.1, recent_weight=0.4, step_weight=0.2, dir_weight=0.3):
-        # Best params: recent_weight = 0.45, final_weight = 0.10, dir_weight = o.45
+    def __init__(self, anchors, vec_weights=0.1, recent_weight=0.44, step_weight=0.30, dir_weight=0.25):
+        # Best params: vec_weights=0.25, recent_weight=0.25, step_weight=0.25, dir_weight=0.25
+        # Best params: vec_weights=0.05, recent_weight=0.35, step_weight=0.15, dir_weight=0.45  Changed ADAM
         super(RecentAndFinalLoss, self).__init__()
         self.recent_weight = recent_weight
         self.step_weight = step_weight
@@ -194,9 +217,9 @@ class RecentAndFinalLoss(nn.Module):
         self.epsilon = 1e-8
         self.anchors = anchors
 
-        self.loss_fn = GPSLoss(x_bias=0.5, y_bias=0.5)  # Best params: x_bias=0.35, y_bias=0.65
-        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.5, beta=0.5)  # Best params: alpha=0.5, beta=0.5
-        self.vector_loss = VectorLoss(self.anchors)
+        self.loss_fn = GPSLoss(x_bias=1, y_bias=1)  # Best params: x_bias=0.35, y_bias=0.65
+        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.25, beta=0.75)  # Best params: alpha=0.25, beta=0.75
+        self.vector_loss = VectorLoss(self.anchors, mag_w=0.30, dir_w=0.70)  # Best params: mag_w=0.40, dir_w=0.60
         self.step_loss = StepDistanceLoss()
         
         self.count = 0
@@ -274,7 +297,7 @@ class RecentAndFinalLoss(nn.Module):
         # final_target = targets[:, -1, :]
         # final_loss = self.loss_fn(final_prediction, final_target)
         
-        total_weights = v_loss + recent_loss + step_loss
+        total_weights = v_loss + recent_loss + step_loss + dir_loss
         combined_loss = ((self.vec_weights / total_weights) * v_loss)
         + ((self.recent_weight / total_weights) * recent_loss) 
         + ((self.step_weight / total_weights) * step_loss)

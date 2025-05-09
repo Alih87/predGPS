@@ -61,6 +61,7 @@ class GI_NN(nn.Module):
 
         a3 = a3.permute(0, 2, 1)
         b, _ = self.gnn(a3)
+        print(b.shape)
         if self.anchors is not None:
             c = self.fc(b[:, -1*self.anchors:, :])      # Use all of 'b' for many-to-many
         else:
@@ -72,7 +73,7 @@ class GI_NN(nn.Module):
         if self.training:
             if y is None:
                 raise ValueError("Targets cannot be None in training mode")
-            print(z.shape, y.shape)
+            # print(z.shape, y.shape)
             loss = self.loss_fn(z, y)
             z = torch.squeeze(z, dim=0)
             return loss, z.cuda().float()
@@ -85,20 +86,20 @@ class GI_NN(nn.Module):
             return z.cuda().float()
 
 if __name__ == '__main__':
-    os.chdir("/data_hdd1/hassan/projects/GPS")
+    os.chdir("/home/hassan/projects/predGPS/")
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    SEQ_LEN = 21
-    INPUT_SIZE = 12
-    ANCHORS = 7
+    SEQ_LEN = 64
+    INPUT_SIZE = 7
+    ANCHORS = 27
 
     model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)
     model.eval()
     x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)
     targets = torch.randn(4, ANCHORS, 2).to(DEVICE)
-    out = model(x, targets).cpu().tolist()
-    print(out[0][-1])
+    out = model(x, targets)
+    # print(out[0][-1])
     if model.training:
         print("loss:", out[0])
         print("pred:", out[1])

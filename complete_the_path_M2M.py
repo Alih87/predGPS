@@ -2,7 +2,7 @@ import torch, os
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from GI_NN_Mod2 import GI_NN
-from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2
+from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, trajectory_construct_M2M
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -75,6 +75,7 @@ preds.append([0,0])
 labels.append([0,0])
 
 with torch.no_grad():
+    FIRST_PRED = True
     for ii, vdata in enumerate(validation_loader):
         # try:-
             vX, vy = vdata
@@ -89,8 +90,8 @@ with torch.no_grad():
                 if ANCHOR is None:
                     if ii < int(START_POINT * validation_loader.__len__()) or ii > int(END_POINT * validation_loader.__len__()):
                         labels.append([
-                        vycpu[i][0] + labels[-1][0],
-                        vycpu[i][1] + labels[-1][1]
+                        vycpu[i][0] + labels[0][0],
+                        vycpu[i][1] + labels[0][1]
                                 ])
                     else:
                         vy_ = model(vX)
@@ -129,23 +130,36 @@ with torch.no_grad():
                         if ANCHOR is not None:
                             vy = vy[:,-1,:].squeeze(dim=1)
                         vy_cpu = vy_.cpu().tolist()
-                        preds.append([
-                            labels[-1][0] + vy_cpu[i][0][0],
-                            # preds[-1][0] - vy_cpu[i][-1][0],
-                            labels[-1][1] - vy_cpu[i][0][1]
-                            # preds[-1][1] - vy_cpu[i][-1][1]
-                                    ])
-                        labels.append([
-                            labels[-1][0] + vy_cpu[i][0][0],
-                            # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                            labels[-1][1] - vy_cpu[i][0][1]
-                            # preds[-1][1] - vy_cpu[i][-1][1]
-                                    ])
-                        batch_idx += 1
-                        if batch_idx > ANCHOR:
-                            batch_idx = 1
-                            offset += ANCHOR-1
-
+                        if len(labels) < 32:
+                            preds.append([
+                                labels[-1][0] + vy_cpu[i][0][0],
+                                # preds[-1][0] - vy_cpu[i][-1][0],
+                                labels[-1][1] - vy_cpu[i][0][1]
+                                # preds[-1][1] - vy_cpu[i][-1][1]
+                                        ])
+                            labels.append([
+                                labels[-1][0] + vy_cpu[i][0][0],
+                                # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
+                                labels[-1][1] - vy_cpu[i][0][1]
+                                # preds[-1][1] - vy_cpu[i][-1][1]
+                                        ])
+                            labels.extend(vy_cpu[i][1:])
+                            batch_idx += 1
+                            if batch_idx > ANCHOR:
+                                batch_idx = 1
+                                offset += ANCHOR-1
+                        else:
+                            labels = trajectory_construct_M2M(vy_cpu[i], labels, ANCHOR)
+                            if FIRST_PRED:
+                                preds = trajectory_construct_M2M(vy_cpu[i], labels, ANCHOR)
+                                FIRST_PRED = False
+                            else:
+                                preds = trajectory_construct_M2M(vy_cpu[i], preds, ANCHOR)
+                            
+                            batch_idx += 1
+                            if batch_idx > ANCHOR:
+                                batch_idx = 1
+                                offset += ANCHOR-1
         # except:
             # print("[INFO] Not enough data, proceeding...")
             # break

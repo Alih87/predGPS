@@ -87,7 +87,7 @@ class GI_NN(nn.Module):
             return loss, z_flipped[:, -self.anchors:, :].cuda().float()
         else:
             z_flipped = torch.flip(z[:, -self.anchors:, :], [1])
-            return z_flipped[:, -self.anchors:, :].cuda().float()
+            return z[:, -self.anchors:, :].cuda().float()
 
 
 if __name__ == '__main__':
@@ -108,4 +108,6 @@ if __name__ == '__main__':
         out = model(x, targets)
         print("loss:", out[0])
         print("pred:", out[1])
+    else:
+        print(out)
     
