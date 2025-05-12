@@ -50,27 +50,30 @@ def make_vectors(distances, routine=False):
     else:
         return torch.tensor(vectors)
     
-def trajectory_construct_M2M(pred, label_list, ANCHOR_SIZE):
+def trajectory_construct_M2M(pred, label_list, ANCHOR_SIZE, scale=True):
     idx = 0
-    label_list_copy = copy(label_list)
-    label_list.append([0, 0])
-    # print(label_list)
+    label_list_copy = copy(label_list)  # Maintain a copy to compare scaling
+    label_list.append([0,0])
     for prx, pry in pred:
-        lbl_idx = int(-ANCHOR_SIZE + idx - 1)
-        # print(prx, pry)
+        lbl_idx = int(-ANCHOR_SIZE + idx)
+        
         try:
-            # print(label_list[lbl_idx][0], label_list[lbl_idx][1])
-            label_list[lbl_idx] = [label_list[lbl_idx-idx][0] + prx,
-                                   label_list[lbl_idx-idx][1] + pry]
-            label_list[lbl_idx] = [(label_list[lbl_idx-idx][0] + label_list_copy[lbl_idx-idx-1][0]) / 2,
-                                   (label_list[lbl_idx-idx][1] + label_list_copy[lbl_idx-idx-1][1]) / 2]
+            # Update the last point in the label list based on the predicted values
+            label_list[lbl_idx] = [label_list[lbl_idx - 1][0] + prx,
+                                   label_list[lbl_idx - 1][1] + pry]
+            
+            # Scale if required (average the current point and the previous one)
+            if scale:
+                label_list[lbl_idx] = [(label_list[lbl_idx][0] + label_list_copy[lbl_idx-1][0]) / 2,
+                                       (label_list[lbl_idx][1] + label_list_copy[lbl_idx-1][1]) / 2]
         except IndexError:
-            label_list.extend(pred)
+            # If out of index, add remaining predictions
+            label_list.extend(pred[idx:])
             break
-        # label_list.append([prx, pry])
         idx += 1
     
     return label_list
+
 
 class IMUDataset(Dataset):
     def __init__(self, X, y, seq_len, anchors=None, scaler=None):

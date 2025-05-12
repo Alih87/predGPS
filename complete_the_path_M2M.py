@@ -17,8 +17,8 @@ SEQ_LEN = 64
 INPUT_SIZE = 7
 ANCHOR = 32
 
-START_POINT = 0.6  #0.6
-END_POINT = 0.75    #0.75
+START_POINT = 0.4  #0.6
+END_POINT = 0.46    #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -73,6 +73,7 @@ running_vloss = 0.0
 labels, preds = list(), list()
 preds.append([0,0])
 labels.append([0,0])
+only_preds = list()
 
 with torch.no_grad():
     FIRST_PRED = True
@@ -134,13 +135,13 @@ with torch.no_grad():
                             preds.append([
                                 labels[-1][0] + vy_cpu[i][0][0],
                                 # preds[-1][0] - vy_cpu[i][-1][0],
-                                labels[-1][1] - vy_cpu[i][0][1]
+                                labels[-1][1] + vy_cpu[i][0][1]
                                 # preds[-1][1] - vy_cpu[i][-1][1]
                                         ])
                             labels.append([
                                 labels[-1][0] + vy_cpu[i][0][0],
                                 # preds[-batch_idx-offset][0] - vy_cpu[i][-1][0],
-                                labels[-1][1] - vy_cpu[i][0][1]
+                                labels[-1][1] + vy_cpu[i][0][1]
                                 # preds[-1][1] - vy_cpu[i][-1][1]
                                         ])
                             labels.extend(vy_cpu[i][1:])
@@ -151,15 +152,19 @@ with torch.no_grad():
                         else:
                             labels = trajectory_construct_M2M(vy_cpu[i], labels, ANCHOR)
                             if FIRST_PRED:
-                                preds = trajectory_construct_M2M(vy_cpu[i], labels, ANCHOR)
+                                preds = trajectory_construct_M2M(vy_cpu[i], labels[-ANCHOR-1:], ANCHOR)
+                                # only_preds = trajectory_construct_M2M(vy_cpu[i], labels[-ANCHOR-1:], ANCHOR)
                                 FIRST_PRED = False
                             else:
                                 preds = trajectory_construct_M2M(vy_cpu[i], preds, ANCHOR)
+                                # only_preds = trajectory_construct_M2M(vy_cpu[i], only_preds, ANCHOR)
                             
                             batch_idx += 1
                             if batch_idx > ANCHOR:
                                 batch_idx = 1
                                 offset += ANCHOR-1
+                    # print(len(labels))
+                    # print(len(preds))
         # except:
             # print("[INFO] Not enough data, proceeding...")
             # break
@@ -179,6 +184,7 @@ for idx, p in enumerate(preds):
 
 plt.scatter(lx, ly)
 plt.scatter(px[1:], py[1:])
+# plt.scatter(opx[1:], opy[1:])
 plt.title("Trajectory Comparison")
 plt.xlabel("Easting")
 plt.ylabel("Northing")
