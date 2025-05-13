@@ -2,7 +2,7 @@ import torch, os
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from GI_NN_Mod2 import GI_NN
-from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, trajectory_construct_M2M
+from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, trajectory_construct_M2M, rotate_preds
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -17,8 +17,8 @@ SEQ_LEN = 64
 INPUT_SIZE = 7
 ANCHOR = 32
 
-START_POINT = 0.4  #0.6
-END_POINT = 0.46    #0.75
+START_POINT = 0.2  #0.6
+END_POINT = 0.3    #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -131,6 +131,7 @@ with torch.no_grad():
                         if ANCHOR is not None:
                             vy = vy[:,-1,:].squeeze(dim=1)
                         vy_cpu = vy_.cpu().tolist()
+                        vy_cpu = rotate_preds(vy_cpu)
                         if len(labels) < 32:
                             preds.append([
                                 labels[-1][0] + vy_cpu[i][0][0],

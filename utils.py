@@ -74,6 +74,19 @@ def trajectory_construct_M2M(pred, label_list, ANCHOR_SIZE, scale=True):
     
     return label_list
 
+def rotate_preds(predictions):
+    rotated_predictions = []
+
+    for p in predictions[0]:
+        # Rotate the point (x, y) by -90 degrees using the rotation matrix:
+        # [cos(-90°), -sin(-90°)]     [x]
+        # [sin(-90°),  cos(-90°)]  *  [y]
+        # Which simplifies to: 
+        # [0, -1] [x]  = [-y]
+        # [1,  0] [y]     [x]
+        rotated_predictions.append([-p[1], -p[0]])
+
+    return [rotated_predictions]
 
 class IMUDataset(Dataset):
     def __init__(self, X, y, seq_len, anchors=None, scaler=None):
