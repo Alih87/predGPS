@@ -17,8 +17,8 @@ SEQ_LEN = 64
 INPUT_SIZE = 7
 ANCHOR = 32
 
-START_POINT = 0.2  #0.6
-END_POINT = 0.3    #0.75
+START_POINT = 0.6  #0.6
+END_POINT = 0.75    #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -62,7 +62,7 @@ yt = (np.asanyarray(yt)).tolist()
 validation_loader = DataLoader(IMUDataset_M2M(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHOR), batch_size=1, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20250508_065917/model_20250508_065917_249.pth"))
+model.load_state_dict(torch.load("chkpts/20250519_122710/model_20250519_122710_349.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()

@@ -7,6 +7,8 @@ from copy import copy
 import datetime
 from collections import deque
 import numpy as np
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 
 def collate_fn(batch):
     X, y = zip(*batch)
@@ -22,6 +24,28 @@ def make_distances(points):
         dists.append(np.linalg.norm(points[idx+1] - points[idx]))
     dists.append(0)
     return dists
+
+def compute_dtw(pred, gt):
+    distance, path = fastdtw(pred, gt, dist=euclidean)
+    return distance, path
+
+def plot_dtw_path(pred_traj, gt_traj, path):
+    pred_path, gt_path = zip(*path)
+    pred_traj_x, pred_traj_y = zip(*pred_traj)
+    gt_traj_x, gt_traj_y = zip(*gt_traj)
+    
+    plt.plot(pred_traj_x, pred_traj_y, label="Predicted", color="blue")
+    plt.plot(gt_traj_x, gt_traj_y, label="Ground Truth", color="red")
+    
+    # Plot the DTW alignment path
+    for i, j in path:
+        plt.plot([pred_traj_x[i], gt_traj_x[j]], [pred_traj_y[i], gt_traj_y[j]], color='green', linestyle='dashed', alpha=0.6)
+    
+    plt.title("DTW Alignment")
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.legend()
+    plt.show()
 
 def make_vectors(distances, routine=False):
     vectors = []
@@ -211,8 +235,8 @@ class StepDistanceLoss(nn.Module):
         # pred_abs: [batch, anchors, 2]
         # target_abs: [batch, anchors, 2]
 
-        pred_steps = pred_abs[:, 1:, :] - pred_abs[:, :-1, :]  # [batch, anchors-1, 2]
-        target_steps = target_abs[:, 1:, :] - target_abs[:, :-1, :]  # [batch, anchors-1, 2]
+        pred_steps = pred_abs[:, 1:, :] - pred_abs[:, :-1, :]  # [batch, anchors-1, 2        target_steps = target_abs[:, 1:, :] - target_abs[:, :-1, :]  # [batch, anchors-1, 2]
+        target_steps = target_abs[:, 1:, :] - target_abs[:, :-1, :]
 
         pred_dists = torch.norm(pred_steps, dim=2)  # [batch, anchors-1]
         target_dists = torch.norm(target_steps, dim=2)  # [batch, anchors-1]
@@ -222,7 +246,10 @@ class StepDistanceLoss(nn.Module):
         return loss
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, vec_weights=0.1, recent_weight=0.44, step_weight=0.30, dir_weight=0.25):
+    def __init__(self, anchors, vec_weights=0.33, recent_weight=0.33, step_weight=0.01, dir_weight=0.33):
+        # getting hotter: vec_weights=0.21, recent_weight=0.34, step_weight=0.01, dir_weight=0.44
+        # even better: vec_weights=0.19, recent_weight=0.35, step_weight=0.01, dir_weight=0.45
+        # getting better: vec_weights=0.29, recent_weight=0.35, step_weight=0.01, dir_weight=0.35
         # Best params: vec_weights=0.25, recent_weight=0.25, step_weight=0.25, dir_weight=0.25
         # Best params: vec_weights=0.05, recent_weight=0.35, step_weight=0.15, dir_weight=0.45  Changed ADAM
         super(RecentAndFinalLoss, self).__init__()
@@ -233,8 +260,8 @@ class RecentAndFinalLoss(nn.Module):
         self.epsilon = 1e-8
         self.anchors = anchors
 
-        self.loss_fn = GPSLoss(x_bias=1, y_bias=1)  # Best params: x_bias=0.35, y_bias=0.65
-        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.25, beta=0.75)  # Best params: alpha=0.25, beta=0.75
+        self.loss_fn = GPSLoss(x_bias=0.35, y_bias=0.65)  # Best params: x_bias=0.35, y_bias=0.65
+        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.2, beta=0.8)  # Best params: alpha=0.25, beta=0.75
         self.vector_loss = VectorLoss(self.anchors, mag_w=0.30, dir_w=0.70)  # Best params: mag_w=0.40, dir_w=0.60
         self.step_loss = StepDistanceLoss()
         
