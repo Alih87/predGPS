@@ -74,8 +74,8 @@ class GI_NN(nn.Module):
 
         # GRU
         b, _ = self.gnn(combined)
-        c = self.fc(b)
-        c = self.tanh(c)
+        c = self.fc(b) * 1.11
+        # c = self.tanh(c)
         d = self.drop_out(c)
         z = self.last_layer(d)  # shape: [batch, seq_len, output_channels]
 

@@ -17,8 +17,8 @@ SEQ_LEN = 64
 INPUT_SIZE = 7
 ANCHOR = 32
 
-START_POINT = 0.6  #0.6
-END_POINT = 0.75    #0.75
+START_POINT = 0.63  #0.6
+END_POINT = 0.75   #0.75
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -62,7 +62,7 @@ yt = (np.asanyarray(yt)).tolist()
 validation_loader = DataLoader(IMUDataset_M2M(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHOR), batch_size=1, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20250519_122710/model_20250519_122710_349.pth"))
+model.load_state_dict(torch.load("chkpts/20250525_004448/model_20250525_004448_449.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -71,9 +71,11 @@ model.eval()
 print("Epoch Done")
 running_vloss = 0.0
 labels, preds = list(), list()
+only_preds = list()
+true_labels = list()
 preds.append([0,0])
 labels.append([0,0])
-only_preds = list()
+true_labels.append([0,0])
 
 with torch.no_grad():
     FIRST_PRED = True
@@ -93,6 +95,10 @@ with torch.no_grad():
                         labels.append([
                         vycpu[i][0] + labels[0][0],
                         vycpu[i][1] + labels[0][1]
+                                ])
+                        true_labels.append([
+                        vycpu[i][0][0] + true_labels[-1][0],
+                        vycpu[i][0][1] + true_labels[-1][1]
                                 ])
                     else:
                         vy_ = model(vX)
@@ -120,6 +126,10 @@ with torch.no_grad():
                         labels.append([
                         vycpu[i][0][0] + labels[-1][0],
                         vycpu[i][0][1] + labels[-1][1]
+                                ])
+                        true_labels.append([
+                        vycpu[i][0][0] + true_labels[-1][0],
+                        vycpu[i][0][1] + true_labels[-1][1]
                                 ])
                     else:
                         vy_ = model(vX)
@@ -152,6 +162,10 @@ with torch.no_grad():
                                 offset += ANCHOR-1
                         else:
                             labels = trajectory_construct_M2M(vy_cpu[i], labels, ANCHOR)
+                            true_labels.append([
+                                vycpu[i][0][0] + true_labels[-1][0],
+                                vycpu[i][0][1] + true_labels[-1][1]
+                                ])
                             if FIRST_PRED:
                                 preds = trajectory_construct_M2M(vy_cpu[i], labels[-ANCHOR-1:], ANCHOR)
                                 # only_preds = trajectory_construct_M2M(vy_cpu[i], labels[-ANCHOR-1:], ANCHOR)
@@ -170,8 +184,8 @@ with torch.no_grad():
             # print("[INFO] Not enough data, proceeding...")
             # break
 
-preds = scaler_val.inverse_transform(preds).tolist()
-labels = scaler_val.inverse_transform(labels).tolist()
+preds = scaler_val_train.inverse_transform(preds).tolist()
+labels = scaler_val_train.inverse_transform(true_labels).tolist()
 
 lx, ly = [], []
 for idx, l in enumerate(labels):

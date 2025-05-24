@@ -246,7 +246,8 @@ class StepDistanceLoss(nn.Module):
         return loss
     
 class RecentAndFinalLoss(nn.Module):
-    def __init__(self, anchors, vec_weights=0.33, recent_weight=0.33, step_weight=0.01, dir_weight=0.33):
+    def __init__(self, anchors, vec_weights=0.21, recent_weight=0.34, step_weight=0.01, dir_weight=0.44):
+        # its a start: vec_weights=0.20, recent_weight=0.33, step_weight=0.14, dir_weight=0.33
         # getting hotter: vec_weights=0.21, recent_weight=0.34, step_weight=0.01, dir_weight=0.44
         # even better: vec_weights=0.19, recent_weight=0.35, step_weight=0.01, dir_weight=0.45
         # getting better: vec_weights=0.29, recent_weight=0.35, step_weight=0.01, dir_weight=0.35
@@ -262,7 +263,7 @@ class RecentAndFinalLoss(nn.Module):
 
         self.loss_fn = GPSLoss(x_bias=0.35, y_bias=0.65)  # Best params: x_bias=0.35, y_bias=0.65
         self.dir_loss_fn = DirectionalGPSLoss(alpha=0.2, beta=0.8)  # Best params: alpha=0.25, beta=0.75
-        self.vector_loss = VectorLoss(self.anchors, mag_w=0.30, dir_w=0.70)  # Best params: mag_w=0.40, dir_w=0.60
+        self.vector_loss = VectorLoss(self.anchors, mag_w=0.25, dir_w=0.75)  # Best params: mag_w=0.40, dir_w=0.60
         self.step_loss = StepDistanceLoss()
         
         self.count = 0

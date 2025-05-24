@@ -104,7 +104,7 @@ loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 350
+    EPOCH = 450
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0
