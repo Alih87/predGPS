@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import SGD, Adam
 import matplotlib.pyplot as plt
-from GI_NN_Mod2 import GI_NN
+from GI_NN_Mod3 import GI_NN
+from TF_NN import TF_NN
 from torch.utils.data import DataLoader
 from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, DirectionalGPSLoss, GPSLoss, RecentAndFinalLoss
 
@@ -104,7 +105,7 @@ loss_fn = RecentAndFinalLoss(anchors=ANCHORS)
 if __name__ == '__main__':
     wandb.init(project="GNSS", entity='ciir')
     preds, labels = [], []
-    EPOCH = 450
+    EPOCH = 350
     train_loss, val_loss = [], []
     train_loss_all, val_loss_all = [], []
     epoch_number = 0

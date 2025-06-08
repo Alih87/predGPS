@@ -33,16 +33,25 @@ class GI_NN(nn.Module):
         self.fusion_layer2 = nn.Conv1d(256 + 128, 256, kernel_size=1)
         self.fusion_bn2 = nn.BatchNorm1d(256)
 
-        # GRU and output
-        self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
+        # GRU for temporal modeling
+        self.gnn = nn.GRU(input_size=256, hidden_size=128, num_layers=2, batch_first=True, bidirectional=True)
+
+        # Output layers
         self.fc = nn.Linear(256, 64)
         self.drop_out = nn.Dropout(0.1)
-        self.last_layer = nn.Linear(64, output_channels)
+        self.direction_layer = nn.Linear(64, output_channels)  # will be normalized
+        self.scale_head = nn.Sequential(
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
+            nn.Softplus()  # positive scale values
+        )
 
         self.relu = nn.ReLU()
-        self.tanh = nn.Tanh()
-
         self.loss_fn = RecentAndFinalLoss(anchors=self.anchors)
+
+    def normalize_vector(self, v):
+        return v / (v.norm(p=2, dim=-1, keepdim=True) + 1e-8)
 
     def forward(self, x, y=None):
         # Global path
@@ -70,14 +79,19 @@ class GI_NN(nn.Module):
         combined = self.relu(self.fusion_bn2(self.fusion_layer2(combined))) + g_skip
 
         # Prepare for GRU
-        combined = combined.permute(0, 2, 1)
+        combined = combined.permute(0, 2, 1)  # (B, Seq, Features)
 
         # GRU
         b, _ = self.gnn(combined)
-        c = self.fc(b[:, -1*self.anchors:, :])
-        # c = self.tanh(c)
+
+        # Fully connected head
+        c = self.fc(b[:, -self.anchors:, :])
         d = self.drop_out(c)
-        z = self.last_layer(d)  # shape: [batch, seq_len, output_channels]
+
+        directions = self.direction_layer(d)  # normalized directions
+        scales = self.scale_head(d)  # scalar step magnitudes
+
+        z = directions * scales  # final predicted displacements
 
         if self.training:
             if y is None:
@@ -110,4 +124,3 @@ if __name__ == '__main__':
         print("pred:", out[1])
     else:
         print(out)
-    

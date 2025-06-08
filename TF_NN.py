@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils import RecentAndFinalLoss, DirectionalGPSLoss, GPSLoss
 
-class GI_NN(nn.Module):
+class TF_NN(nn.Module):
     def __init__(self, input_size, output_channels, anchors, SEQ_LEN):
-        super(GI_NN, self).__init__()
+        super(TF_NN, self).__init__()
         self.input_size = input_size
         self.seq_len = SEQ_LEN
         self.anchors = anchors
@@ -33,15 +33,16 @@ class GI_NN(nn.Module):
         self.fusion_layer2 = nn.Conv1d(256 + 128, 256, kernel_size=1)
         self.fusion_bn2 = nn.BatchNorm1d(256)
 
-        # GRU and output
-        self.gnn = nn.GRU(256, 128, 4, batch_first=True, bidirectional=True)
+        # Transformer Encoder
+        encoder_layer = nn.TransformerEncoderLayer(d_model=256, nhead=4, dim_feedforward=512, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=2)
+
+        # Output layers
         self.fc = nn.Linear(256, 64)
         self.drop_out = nn.Dropout(0.1)
         self.last_layer = nn.Linear(64, output_channels)
 
         self.relu = nn.ReLU()
-        self.tanh = nn.Tanh()
-
         self.loss_fn = RecentAndFinalLoss(anchors=self.anchors)
 
     def forward(self, x, y=None):
@@ -69,25 +70,25 @@ class GI_NN(nn.Module):
         combined = torch.cat([f_combined, g], dim=1)
         combined = self.relu(self.fusion_bn2(self.fusion_layer2(combined))) + g_skip
 
-        # Prepare for GRU
-        combined = combined.permute(0, 2, 1)
+        # Prepare for Transformer
+        combined = combined.permute(0, 2, 1)  # (B, Seq, Features)
 
-        # GRU
-        b, _ = self.gnn(combined)
-        c = self.fc(b[:, -1*self.anchors:, :])
-        # c = self.tanh(c)
+        # Transformer
+        b = self.transformer_encoder(combined)
+
+        c = self.fc(b) * 1.11
         d = self.drop_out(c)
         z = self.last_layer(d)  # shape: [batch, seq_len, output_channels]
 
         if self.training:
             if y is None:
                 raise ValueError("Targets cannot be None in training mode")
-            z_flipped = torch.flip(z, [1])
+            z_flipped = torch.flip(z[:, -self.anchors:, :], [1])
             loss = self.loss_fn(z_flipped, y)
-            return loss, z.cuda().float()
+            return loss, z[:, -self.anchors:, :].cuda().float()
         else:
-            z_flipped = torch.flip(z, [1])
-            return z.cuda().float()
+            z_flipped = torch.flip(z[:, -self.anchors:, :], [1])
+            return z[:, -self.anchors:, :].cuda().float()
 
 
 if __name__ == '__main__':
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     INPUT_SIZE = 12
     ANCHORS = 32
 
-    model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
+    model = TF_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHORS, SEQ_LEN=SEQ_LEN)
     model.to(DEVICE)
     model.eval()
     x = torch.randn(4, INPUT_SIZE, SEQ_LEN).to(DEVICE)
@@ -110,4 +111,3 @@ if __name__ == '__main__':
         print("pred:", out[1])
     else:
         print(out)
-    

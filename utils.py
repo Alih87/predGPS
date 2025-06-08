@@ -57,7 +57,7 @@ def make_vectors(distances, routine=False):
         vectors.insert(0, [distances[0,i,0], distances[0,i,1]])
         # vectors.append([x, y])
     vectors.append([0, 0])
-    vectors.reverse()
+    # vectors.reverse()
     # diff = calculate_difference(np.arctan2(vectors[-1][1], vectors[-1][0]),
     #                             np.arctan2(vectors[0][1], vectors[0][0]))
     # print("Angle2: ", np.arctan2(vectors[-1][1], vectors[-1][0]) * (180/np.pi))
@@ -108,7 +108,8 @@ def rotate_preds(predictions):
         # Which simplifies to: 
         # [0, -1] [x]  = [-y]
         # [1,  0] [y]     [x]
-        rotated_predictions.append([-p[1], -p[0]])
+        rotated_predictions.append([-1.97*p[1], p[0]])
+        # rotated_predictions.append([-0.2*p[1], -0.2*p[0]])
 
     return [rotated_predictions]
 
@@ -159,7 +160,10 @@ class IMUDataset_M2M(Dataset):
             self.scaler_x, self.scaler_y = scaler[0], scaler[1]
 
     def __len__(self):
-        return len(self.X) - self.seq_len - self.anchors
+        if self.anchors is not None:
+            return len(self.X) - self.seq_len - self.anchors
+        else:
+            return len(self.X) - self.seq_len
 
     def __getitem__(self, idx):
         # Input sequence
@@ -261,9 +265,9 @@ class RecentAndFinalLoss(nn.Module):
         self.epsilon = 1e-8
         self.anchors = anchors
 
-        self.loss_fn = GPSLoss(x_bias=0.35, y_bias=0.65)  # Best params: x_bias=0.35, y_bias=0.65
-        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.2, beta=0.8)  # Best params: alpha=0.25, beta=0.75
-        self.vector_loss = VectorLoss(self.anchors, mag_w=0.25, dir_w=0.75)  # Best params: mag_w=0.40, dir_w=0.60
+        self.loss_fn = GPSLoss(x_bias=0.45, y_bias=0.55)  # Best params: x_bias=0.45, y_bias=0.55
+        self.dir_loss_fn = DirectionalGPSLoss(alpha=0.25, beta=0.75)  # Best params: alpha=0.25, beta=0.75
+        self.vector_loss = VectorLoss(self.anchors, mag_w=0.15, dir_w=0.85)  # Good params: mag_w=0.25, dir_w=0.75, Even better params: mag_w=0.15, dir_w=0.85
         self.step_loss = StepDistanceLoss()
         
         self.count = 0
@@ -272,6 +276,7 @@ class RecentAndFinalLoss(nn.Module):
         # self.cosine_loss = nn.CosineSimilarity(dim=-1, eps=self.epsilon)
 
     def forward(self, predictions, targets):
+        recent_loss = 0
         if self.anchors is None or len(predictions.size()) < 3:
             directional_loss = (1-self.cosine_loss(predictions, targets)).mean()
 
@@ -331,8 +336,11 @@ class RecentAndFinalLoss(nn.Module):
         self.count += 1
         # pred_vectors = recent_predictions[:, 1:, :] - recent_predictions[:, :-1, :]
         # target_vectors = recent_targets[:, 1:, :] - recent_targets[:, :-1, :]
-
-        recent_loss = self.loss_fn(recent_predictions, recent_targets)
+        
+        for q in range(recent_predictions.shape[0]):
+            r_loss, _ = fastdtw(recent_predictions.detach().cpu().numpy()[q], recent_targets.detach().cpu().numpy()[q], dist=euclidean)
+            recent_loss += r_loss
+        recent_loss /= recent_predictions.shape[0]
         dir_loss = self.dir_loss_fn(recent_predictions, recent_targets)
         step_loss =  self.step_loss(abs_predictions, abs_targets)
 
@@ -403,6 +411,7 @@ class DirectionalGPSLoss(nn.Module):
     
 class VectorLoss(nn.Module):
     def __init__(self, anchors, mag_w=0.40, dir_w=0.60):
+        # Best yet: mag_w=0.40, dir_w=0.60
         super(VectorLoss, self).__init__()
         self.mag_w = mag_w
         self.dir_w = dir_w

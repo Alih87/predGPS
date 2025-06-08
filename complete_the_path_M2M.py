@@ -1,7 +1,7 @@
 import torch, os
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from GI_NN_Mod2 import GI_NN
+from GI_NN_Mod3 import GI_NN
 from utils import IMUDataset, IMUDataset_M2M, IMUDataset_M2M_V2, trajectory_construct_M2M, rotate_preds
 from torch.utils.data import DataLoader
 import numpy as np
@@ -13,12 +13,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 train_path = "data/dataset_train.txt"
 val_path = "data/dataset_test_spiral.txt"
 
-SEQ_LEN = 64
+SEQ_LEN = 32
 INPUT_SIZE = 7
-ANCHOR = 32
+ANCHOR = 16
 
-START_POINT = 0.63  #0.6
-END_POINT = 0.75   #0.75
+START_POINT = 0.5 #0.6
+END_POINT = 0.6  #0.75
+
+scale_factor = 0.4 # Try 2.0, 3.0, etc.
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(DEVICE)
@@ -62,7 +64,7 @@ yt = (np.asanyarray(yt)).tolist()
 validation_loader = DataLoader(IMUDataset_M2M(Xv, yv, seq_len=SEQ_LEN, anchors=ANCHOR), batch_size=1, shuffle=False)
 
 model = GI_NN(input_size=INPUT_SIZE, output_channels=2, anchors=ANCHOR, SEQ_LEN=SEQ_LEN)
-model.load_state_dict(torch.load("chkpts/20250525_004448/model_20250525_004448_449.pth"))
+model.load_state_dict(torch.load("chkpts/20250528_161505/model_20250528_161505_449.pth"))
 # model.load_state_dict(torch.load("chkpts/20241105_165051/model_20241105_165051_61.pth"))
 model.to(DEVICE)
 model = model.cuda().float()
@@ -141,6 +143,7 @@ with torch.no_grad():
                         if ANCHOR is not None:
                             vy = vy[:,-1,:].squeeze(dim=1)
                         vy_cpu = vy_.cpu().tolist()
+                        vy_cpu[i] = [[scale_factor * dx, scale_factor * dy] for dx, dy in vy_cpu[i]]
                         vy_cpu = rotate_preds(vy_cpu)
                         if len(labels) < 32:
                             preds.append([
