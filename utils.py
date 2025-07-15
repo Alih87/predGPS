@@ -108,7 +108,7 @@ def rotate_preds(predictions):
         # Which simplifies to: 
         # [0, -1] [x]  = [-y]
         # [1,  0] [y]     [x]
-        rotated_predictions.append([-1.97*p[1], p[0]])
+        rotated_predictions.append([-3.97*p[1], p[0]])
         # rotated_predictions.append([-0.2*p[1], -0.2*p[0]])
 
     return [rotated_predictions]
